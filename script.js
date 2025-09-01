@@ -1,7 +1,4 @@
+function showSection(id) { const sections = document.querySelectorAll("main section"); sections.forEach(section => section.classList.remove("active"));
 
-function showSection(id) {
-  document.querySelectorAll('section').forEach(section => {
-    section.classList.remove('active');
-  });
-  document.getElementById(id).classList.add('active');
-}
+const selected = document.getElementById(id); if (selected) { selected.classList.add("active"); } }
+
