@@ -1,35 +1,79 @@
-
 body {
   margin: 0;
-  background-color: #000010;
-  color: white;
-  font-family: sans-serif;
+  font-family: 'Segoe UI', sans-serif;
+  background: url('https://upload.wikimedia.org/wikipedia/commons/6/6f/ESO_-_The_Skull_Nebula_%28by%29.jpg') no-repeat center center fixed;
+  background-size: cover;
+  color: #ffffff;
 }
+
 header {
-  background-color: #1e1b4b;
+  background-color: rgba(0, 0, 30, 0.8);
   padding: 20px;
   text-align: center;
+  box-shadow: 0 0 10px #000;
 }
+
+header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  color: #90caf9;
+}
+
+.icon {
+  font-size: 2rem;
+  margin-left: 10px;
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from { text-shadow: 0 0 5px #fff, 0 0 10px #f0f, 0 0 15px #0ff; }
+  to   { text-shadow: 0 0 15px #0ff, 0 0 25px #0ff, 0 0 35px #0ff; }
+}
+
+nav {
+  margin-top: 15px;
+}
+
 nav button {
-  margin: 10px;
+  margin: 5px;
   padding: 10px 20px;
-  background-color: #2d2e4f;
-  color: white;
   border: none;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 1rem;
+  border-radius: 6px;
   cursor: pointer;
+  transition: background 0.3s;
 }
+
+nav button:hover {
+  background-color: rgba(144, 202, 249, 0.3);
+}
+
+main {
+  padding: 20px;
+  min-height: 70vh;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
 section {
   display: none;
-  padding: 20px;
 }
+
 section.active {
   display: block;
+  animation: fadeIn 0.5s ease-in-out;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 footer {
+  background-color: rgba(0, 0, 30, 0.8);
   text-align: center;
-  padding: 10px;
-  background-color: #1e1b4b;
-  position: fixed;
-  width: 100%;
-  bottom: 0;
+  padding: 15px;
+  font-size: 0.9rem;
+  color: #aaa;
 }
