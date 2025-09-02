@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <title>ISS – Live + Mapa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Najpierw lokalnie (jeśli masz /libs/), potem CDN jako awaryjne -->
+  <link rel="stylesheet" href="../libs/leaflet.css">
+  <script src="../libs/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <div class="nav">
+    <div class="nav-inner container">
+      <div class="brand"><div class="logo"></div><h1>AstroTrapez</h1></div>
+      <div><a class="btn" href="../">⬅ Wróć</a></div>
+    </div>
+  </div>
+
+  <main class="container section">
+    <h2>🚀 ISS – Live + Mapa</h2>
+    <div class="grid grid-2" style="margin-top:10px">
+      <div>
+        <!-- Autoplay wymaga mute=1 -->
+        <iframe src="https://www.youtube.com/embed/fO9e9jnhYK8?autoplay=1&mute=1"
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowfullscreen></iframe>
+      </div>
+      <div id="map"></div>
+    </div>
+  </main>
+
+  <a class="tiply-fab" href="https://tipply.pl/@trap3zik" target="_blank" rel="noopener">💜 Wesprzyj</a>
+
+  <script>
+    // Prosta mapa ISS
+    const map = L.map('map').setView([0,0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+    const marker = L.marker([0,0]).addTo(map);
+
+    async function updateISS(){
+      try{
+        const r = await fetch('https://api.wheretheiss.at/v1/satellites/25544');
+        const d = await r.json();
+        marker.setLatLng([d.latitude, d.longitude]);
+        map.panTo([d.latitude, d.longitude], {animate:true});
+      }catch(e){ console.warn('ISS fetch failed', e); }
+    }
+    updateISS();
+    setInterval(updateISS, 5000);
+  </script>
+</body>
+</html>
