@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <title>Wyrzuty słoneczne (NASA DONKI)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <div class="nav">
+    <div class="nav-inner container">
+      <div class="brand"><div class="logo"></div><h1>AstroTrapez</h1></div>
+      <div><a class="btn" href="../">⬅ Wróć</a></div>
+    </div>
+  </div>
+
+  <main class="container section">
+    <h2>☀️ Rozbłyski słoneczne (ostatnie 14 dni)</h2>
+    <div id="flareList">Wczytywanie...</div>
+  </main>
+
+  <a class="tiply-fab" href="https://tipply.pl/@trap3zik" target="_blank" rel="noopener">💜 Wesprzyj</a>
+
+  <script>
+    async function loadFlares(){
+      const end=new Date(); const start=new Date(end.getTime()-1000*60*60*24*14);
+      const url=`https://api.nasa.gov/DONKI/FLR?startDate=${start.toISOString().slice(0,10)}&endDate=${end.toISOString().slice(0,10)}&api_key=DEMO_KEY`;
+      try{
+        const r=await fetch(url); const data=await r.json();
+        const list=document.getElementById('flareList'); list.innerHTML='';
+        if(Array.isArray(data) && data.length){
+          data.sort((a,b)=>new Date(b.beginTime)-new Date(a.beginTime));
+          for(const flr of data){
+            const el=document.createElement('div'); el.className='card';
+            el.innerHTML = `<strong>${flr.classType||'N/A'}</strong> • ${new Date(flr.beginTime).toLocaleString()}<br>
+              ${flr.sourceLocation||''} ${flr.activeRegionNum?('• AR '+flr.activeRegionNum):''}
+              ${flr.peakTime?('<br><span style="color:#aab2d5">peak:</span> '+new Date(flr.peakTime).toLocaleString()):''}`;
+            list.appendChild(el);
+          }
+        } else {
+          list.textContent = 'Brak danych w tym zakresie.';
+        }
+      }catch(e){
+        document.getElementById('flareList').textContent = 'Błąd pobierania danych NASA.';
+      }
+    }
+    loadFlares();
+  </script>
+</body>
+</html>
