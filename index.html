@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>AstroTrapez</title>
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="libs/leaflet.css">
+<link rel="stylesheet" href="libs/lightbox.css">
+<script src="libs/leaflet.js"></script>
+<script src="libs/lightbox.js"></script>
+</head>
+<body>
+<canvas id="starfield"></canvas>
+<header>
+ <h1>AstroTrapez</h1>
+ <nav>
+   <a href="#live">Live</a>
+   <a href="#gallery">Galeria</a>
+   <a href="#iss">ISS</a>
+ </nav>
+</header>
+<section id="live">
+ <h2>Transmisja na żywo</h2>
+ <iframe src="https://www.youtube.com/embed/ybAUylnO80M" allowfullscreen></iframe>
+</section>
+<section id="gallery">
+ <h2>Galeria</h2>
+ <div>
+  <a href="assets/gallery/astro_01.jpg" data-lightbox="gal"><img src="assets/gallery/astro_01.jpg" width="200"></a>
+  <a href="assets/gallery/astro_02.jpg" data-lightbox="gal"><img src="assets/gallery/astro_02.jpg" width="200"></a>
+  <a href="assets/gallery/astro_03.jpg" data-lightbox="gal"><img src="assets/gallery/astro_03.jpg" width="200"></a>
+  <a href="assets/gallery/astro_04.jpg" data-lightbox="gal"><img src="assets/gallery/astro_04.jpg" width="200"></a>
+ </div>
+</section>
+<section id="iss">
+ <h2>ISS Live + Mapa</h2>
+ <iframe src="https://www.youtube.com/embed/21X5lGlDOfg" allowfullscreen></iframe>
+ <div id="map"></div>
+ <p>Lat: <span id="lat">-</span>, Lon: <span id="lon">-</span>, Alt: <span id="alt">-</span> km, Vel: <span id="vel">-</span> km/h</p>
+</section>
+<a href="https://tipply.pl/@trap3zik" class="tiply" target="_blank">💜 Wesprzyj</a>
+<script src="js/app.js"></script>
+</body>
+</html>
