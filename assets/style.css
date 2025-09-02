@@ -1,0 +1,25 @@
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: url('tlo.jpg') no-repeat center center fixed;
+    background-size: cover;
+    color: white;
+    text-align: center;
+}
+nav a {
+    margin: 0 10px;
+    text-decoration: none;
+    color: #66ccff;
+}
+.tip-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #66ccff;
+    padding: 10px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+}
