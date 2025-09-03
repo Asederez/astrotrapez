@@ -4,35 +4,187 @@
   <meta charset="utf-8" />
   <title>AstroTrapez</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/styles.css?v=5">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+
+  <!-- Leaflet (mapa ISS) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+
+  <!-- TikTok embed (kanał / live) -->
+  <script async src="https://www.tiktok.com/embed.js"></script>
+
+  <style>
+    :root{
+      --bg:#060712;--text:#e8ecff;--muted:#aab2d5;
+      --accent:#7aa2ff;--accent2:#6e44ff;--radius:16px;
+      --panel:rgba(255,255,255,.05);--border:rgba(255,255,255,.08);
+      --shadow:0 12px 30px rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      min-height:100dvh;
+      background:
+        radial-gradient(1400px 800px at 70% 25%, #2a2358 0%, transparent 60%),
+        #060712;
+      color:var(--text);
+      font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      padding:22px 16px 80px;
+    }
+
+    /* GÓRA: logo + kafelki */
+    .topbar{max-width:1200px;margin:0 auto 18px;display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:center}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:60px;height:60px;border-radius:50%;
+      background:radial-gradient(circle at 30% 30%,#b3c7ff,#6e44ff 60%,#1b1e3c 70%);
+      box-shadow:0 0 28px #6e44ff90,inset 0 0 16px #b3c7ff40}
+    .title{font-size:34px;font-weight:900;letter-spacing:.3px}
+    .nav-cards{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(140px,1fr);gap:12px}
+    .nav-cards a{
+      background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 14px;
+      display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;color:var(--text);
+      font-weight:800;box-shadow:var(--shadow)
+    }
+
+    /* GŁÓWNA SIATKA 2 kolumny */
+    .grid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 1.2fr;gap:18px}
+    .panel{
+      background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);
+      padding:16px
+    }
+    .panel h3{font-size:18px;margin-bottom:10px}
+    .panel .body{border-radius:12px;overflow:hidden}
+
+    /* zakładki (ISS / TikTok) */
+    .tabs{display:flex;gap:8px;margin-bottom:10px}
+    .tab{padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.04);cursor:pointer;font-weight:800;color:var(--text)}
+    .tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b0d1c}
+    .tabpanes > div{display:none}
+    .tabpanes > div.active{display:block}
+
+    iframe{width:100%;height:420px;border:0;border-radius:12px}
+    #map{width:100%;height:340px;border-radius:12px}
+
+    /* RESPONSYWNOŚĆ */
+    @media(max-width:1024px){
+      .topbar{grid-template-columns:1fr}
+      .title{font-size:28px}
+      .nav-cards{grid-auto-flow:row;grid-template-columns:repeat(4,1fr)}
+      .grid{grid-template-columns:1fr}
+      iframe{height:360px}
+      #map{height:300px}
+    }
+    @media(max-width:560px){
+      .nav-cards{grid-template-columns:repeat(2,1fr)}
+    }
+  </style>
 </head>
 <body>
-  <div class="logo"></div>
-  <h1>AstroTrapez</h1>
-  <p>Twoje centrum obserwacji kosmosu – ISS, rozbłyski i astrofotografia</p>
 
-  <div class="cards">
-    <a class="card" href="iss/">
-      <div class="icon">🚀</div>
-      <div class="label">ISS</div>
-    </a>
-    <a class="card" href="wyrzuty/">
-      <div class="icon">☀️</div>
-      <div class="label">Wyrzuty</div>
-    </a>
-    <a class="card" href="galeria/">
-      <div class="icon">🛰️</div>
-      <div class="label">Zdjęcia</div>
-    </a>
-    <a class="card" href="live/">
-      <div class="icon">🎥</div>
-      <div class="label">Live</div>
-    </a>
-  </div>
+  <!-- Góra: logo + kafelki z podfolderami -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo"></div>
+      <div class="title">AstroTrapez</div>
+    </div>
+    <nav class="nav-cards">
+      <a href="iss/">🚀 ISS</a>
+      <a href="wyrzuty/">☀️ Wyrzuty</a>
+      <a href="galeria/">🛰️ Zdjęcia</a>
+      <a href="live/">🎥 Live</a>
+    </nav>
+  </header>
 
-  <a class="tiply-fab" href="https://tipply.pl/@trap3zik" target="_blank" rel="noopener">💜 Wesprzyj</a>
+  <!-- Główna siatka: lewa (TikTok kanał) + prawa (Live + Mapa) -->
+  <main class="grid">
+
+    <!-- LEWA KOLUMNA: KANAŁ NA TIKTOKU -->
+    <section class="panel">
+      <h3>📺 Kanał na TikToku</h3>
+      <div class="body">
+        <!-- WSTAW SWÓJ NICK: data-unique-id="YOUR_TIKTOK_USERNAME"  +  href na profil -->
+        <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@trap3z"
+                  data-unique-id="YOUR_TIKTOK_USERNAME" data-embed-type="creator"
+                  data-embed-from="embed_page" style="max-width: 100%; min-width: 288px;">
+          <section>
+            <a target="_blank" href="https://www.tiktok.com/@YOUR_TIKTOK_USERNAME">@trap3z</a>
+          </section>
+        </blockquote>
+      </div>
+    </section>
+
+    <!-- PRAWA KOLUMNA: góra = Live (zakładki), dół = Mapa ISS -->
+    <div class="col-right" style="display:grid;gap:18px;grid-template-rows:auto 1fr">
+
+      <section class="panel">
+        <h3>🔴 Live z TikToka i ISS</h3>
+        <div class="tabs">
+          <button class="tab active" data-tab="iss">ISS Live</button>
+          <button class="tab" data-tab="tiktok">TikTok Live</button>
+        </div>
+        <div class="tabpanes">
+          <!-- ISS Live -->
+          <div id="pane-iss" class="active">
+            <div class="body">
+              <iframe
+                src="https://www.youtube.com/embed/fO9e9jnhYK8?autoplay=1&mute=1"
+                allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen
+                title="ISS Live"></iframe>
+            </div>
+          </div>
+          <!-- TikTok Live (uwaga: TikTok nie daje stabilnego iframa dla live;
+               poniżej link/przycisk – klik otwiera live w aplikacji/stronie) -->
+          <div id="pane-tiktok">
+            <div class="body" style="display:flex;align-items:center;justify-content:center;min-height:120px;padding:20px">
+              <a href="https://www.tiktok.com/@YOUR_TIKTOK_USERNAME/live"
+                 target="_blank"
+                 style="background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b0d1c;
+                        padding:12px 18px;border-radius:999px;font-weight:900;text-decoration:none;box-shadow:var(--shadow)">
+                ▶ Otwórz TikTok Live
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h3>🗺️ Mapa ISS</h3>
+        <div class="body"><div id="map"></div></div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    // Zakładki (ISS / TikTok)
+    document.querySelectorAll('.tab').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const id = btn.dataset.tab;
+        document.querySelectorAll('.tabpanes > div').forEach(p=>p.classList.remove('active'));
+        document.getElementById('pane-'+id).classList.add('active');
+      });
+    });
+
+    // Mapa ISS (Leaflet + API)
+    function initISS(){
+      if(!window.L) return;
+      const map=L.map('map',{zoomControl:true}).setView([0,0],2);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+        attribution:'&copy; OpenStreetMap'
+      }).addTo(map);
+      const marker=L.marker([0,0]).addTo(map);
+
+      async function update(){
+        try{
+          const r=await fetch('https://api.wheretheiss.at/v1/satellites/25544');
+          const d=await r.json();
+          marker.setLatLng([d.latitude,d.longitude]);
+          map.panTo([d.latitude,d.longitude],{animate:true});
+        }catch(e){ console.warn('ISS fetch failed', e); }
+      }
+      update(); setInterval(update,5000);
+    }
+    window.addEventListener('load', initISS);
+  </script>
 </body>
 </html>
