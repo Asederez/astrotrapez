@@ -2,9 +2,30 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <title>Wyrzuty słoneczne (NASA DONKI)</title>
+  <title>Wyrzuty słoneczne (NASA DONKI + sondy)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="../css/styles.css" />
+  <style>
+    /* trochę dodatkowego stylu tylko dla tej podstrony */
+    .flare-box {
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    #flareList {
+      max-height: 600px; /* żeby nie zajmowało całej strony */
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+    #flareList::-webkit-scrollbar { width: 8px; }
+    #flareList::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 10px;
+    }
+  </style>
 </head>
 <body>
   <div class="nav">
@@ -15,15 +36,38 @@
   </div>
 
   <main class="container section">
-    <h2>☀️ Rozbłyski słoneczne (ostatnie 14 dni)</h2>
-    <div id="flareList">Wczytywanie...</div>
+    <h2>☀️ Wyrzuty słoneczne</h2>
+    <div class="grid grid-2" style="margin-top:16px">
+      
+      <!-- LEWA KOLUMNA: podgląd sond -->
+      <div>
+        <h3>🛰️ Podgląd z sond</h3>
+        <div class="flare-box">
+          <h4>NASA SDO (304 Å)</h4>
+          <img src="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_0304.jpg" 
+               alt="SDO 304 Å" style="width:100%;border-radius:8px">
+        </div>
+        <div class="flare-box">
+          <h4>SOHO LASCO C2 (korona)</h4>
+          <img src="https://sohowww.nascom.nasa.gov/data/realtime/c2/1024/latest.jpg" 
+               alt="SOHO LASCO C2" style="width:100%;border-radius:8px">
+        </div>
+      </div>
+
+      <!-- PRAWA KOLUMNA: dane DONKI -->
+      <div>
+        <h3>🔎 Dane z NASA DONKI (14 dni)</h3>
+        <div id="flareList">Wczytywanie...</div>
+      </div>
+    </div>
   </main>
 
   <a class="tiply-fab" href="https://tipply.pl/@trap3zik" target="_blank" rel="noopener">💜 Wesprzyj</a>
 
   <script>
     async function loadFlares(){
-      const end=new Date(); const start=new Date(end.getTime()-1000*60*60*24*14);
+      const end=new Date(); 
+      const start=new Date(end.getTime()-1000*60*60*24*14);
       const url=`https://api.nasa.gov/DONKI/FLR?startDate=${start.toISOString().slice(0,10)}&endDate=${end.toISOString().slice(0,10)}&api_key=DEMO_KEY`;
       try{
         const r=await fetch(url); const data=await r.json();
@@ -31,7 +75,7 @@
         if(Array.isArray(data) && data.length){
           data.sort((a,b)=>new Date(b.beginTime)-new Date(a.beginTime));
           for(const flr of data){
-            const el=document.createElement('div'); el.className='card';
+            const el=document.createElement('div'); el.className='flare-box';
             el.innerHTML = `<strong>${flr.classType||'N/A'}</strong> • ${new Date(flr.beginTime).toLocaleString()}<br>
               ${flr.sourceLocation||''} ${flr.activeRegionNum?('• AR '+flr.activeRegionNum):''}
               ${flr.peakTime?('<br><span style="color:#aab2d5">peak:</span> '+new Date(flr.peakTime).toLocaleString()):''}`;
