@@ -2,58 +2,84 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <title>ISS – Live + Mapa</title>
+  <title>ISS – Live + Mapa | AstroTrapez</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Najpierw lokalnie (jeśli masz /libs/), potem CDN jako awaryjne -->
-  <link rel="stylesheet" href="../libs/leaflet.css">
-  <script src="../libs/leaflet.js"></script>
+  <link rel="stylesheet" href="../css/styles.css?v=8" />
+  <!-- Leaflet z CDN -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 
-  <link rel="stylesheet" href="../css/styles.css" />
+  <style>
+    .container{max-width:1100px;margin:0 auto;padding:16px}
+    .brand{display:flex;align-items:center;gap:12px;margin:8px 0 12px}
+    .home-link{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none}
+    .home-link:hover{opacity:.95}
+    .brand h1{font-size:28px;font-weight:900}
+    .brand svg{width:28px;height:28px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}
+    .btn{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#e8ecff;padding:6px 12px;border-radius:999px;cursor:pointer;font-weight:800}
+    .btn:hover{opacity:.85}
+
+    .section{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.45);padding:16px}
+    .grid{display:grid;gap:16px}
+    .grid-2{grid-template-columns:1fr 1fr}
+    @media(max-width:900px){.grid-2{grid-template-columns:1fr}}
+    iframe{width:100%;height:420px;border:0;border-radius:12px;box-shadow:0 10px 24px rgba(0,0,0,.45)}
+    #map{width:100%;height:420px;border-radius:12px;overflow:hidden;box-shadow:0 10px 24px rgba(0,0,0,.45)}
+    body{background:radial-gradient(1400px 800px at 70% 25%, #2a2358 0%, transparent 60%), #060712; color:#e8ecff; font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+  </style>
 </head>
 <body>
-  <div class="nav">
-    <div class="nav-inner container">
-      <div class="brand"><div class="logo"></div><h1>AstroTrapez</h1></div>
-      <div><a class="btn" href="../">⬅ Wróć</a></div>
+  <div class="container">
+    <div class="brand">
+      <a href="/" class="home-link" aria-label="Strona główna AstroTrapez">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 20h16M12 20v-6m7.5-6.5-7 3.5-3-6 7-3.5 3 6Z" stroke="#bcd1ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 16l3-2" stroke="#bcd1ff" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <h1>AstroTrapez — ISS</h1>
+      </a>
+      <button id="goBack" class="btn" style="margin-left:auto">← Wróć</button>
+    </div>
+
+    <div class="section">
+      <h2 style="margin:0 0 10px;font-size:22px">🚀 ISS – Live + Mapa</h2>
+      <div class="grid grid-2">
+        <div><iframe src="https://www.youtube.com/embed/fO9e9jnhYK8?autoplay=1&mute=1" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="ISS Live"></iframe></div>
+        <div><div id="map"></div></div>
+      </div>
     </div>
   </div>
 
-  <main class="container section">
-    <h2>🚀 ISS – Live + Mapa</h2>
-    <div class="grid grid-2" style="margin-top:10px">
-      <div>
-        <!-- Autoplay wymaga mute=1 -->
-        <iframe src="https://www.youtube.com/embed/fO9e9jnhYK8?autoplay=1&mute=1"
-                allow="autoplay; encrypted-media; picture-in-picture"
-                allowfullscreen></iframe>
-      </div>
-      <div id="map"></div>
-    </div>
-  </main>
-
-  <a class="tiply-fab" href="https://tipply.pl/@trap3zik" target="_blank" rel="noopener">💜 Wesprzyj</a>
-
   <script>
-    // Prosta mapa ISS
-    const map = L.map('map').setView([0,0], 2);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-    const marker = L.marker([0,0]).addTo(map);
+    // Wróć lub na /
+    (function(){
+      const back = document.getElementById('goBack');
+      if(back){
+        back.addEventListener('click', ()=>{
+          const sameOriginRef = document.referrer && new URL(document.referrer).origin === location.origin;
+          if (sameOriginRef && history.length > 1) history.back(); else location.href = '/';
+        });
+      }
+    })();
 
-    async function updateISS(){
-      try{
-        const r = await fetch('https://api.wheretheiss.at/v1/satellites/25544');
-        const d = await r.json();
-        marker.setLatLng([d.latitude, d.longitude]);
-        map.panTo([d.latitude, d.longitude], {animate:true});
-      }catch(e){ console.warn('ISS fetch failed', e); }
+    // Leaflet mapa ISS
+    function initISS(){
+      if(!window.L) return;
+      const map=L.map('map',{zoomControl:true}).setView([0,0],2);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap'}).addTo(map);
+      const marker=L.marker([0,0]).addTo(map);
+      async function update(){
+        try{
+          const r=await fetch('https://api.wheretheiss.at/v1/satellites/25544');
+          const d=await r.json();
+          marker.setLatLng([d.latitude,d.longitude]);
+          map.panTo([d.latitude,d.longitude],{animate:true});
+        }catch(e){ console.warn(e); }
+      }
+      update(); setInterval(update,5000);
     }
-    updateISS();
-    setInterval(updateISS, 5000);
+    window.addEventListener('load', initISS);
   </script>
 </body>
 </html>
