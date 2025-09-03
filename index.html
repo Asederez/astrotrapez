@@ -7,17 +7,14 @@
   <style>
     :root{
       --bg:#060712;--text:#e8ecff;--muted:#aab2d5;
-      --accent:#7aa2ff;--accent2:#a07cff;
+      --accent:#7aa2ff;--accent2:#6e44ff;
       --radius:16px;--shadow:0 12px 30px rgba(0,0,0,.45);
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{
-      min-height:100vh;
       background:radial-gradient(1200px 700px at 70% 30%, #2a2358 0%, transparent 60%), #060712;
       font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
-      color:var(--text);
-      text-align:center;
-      padding:40px 16px;
+      color:var(--text);text-align:center;padding:40px 16px;
     }
     .logo{
       width:80px;height:80px;border-radius:50%;
@@ -28,23 +25,28 @@
     h1{font-size:36px;margin-bottom:10px}
     p{color:var(--muted);margin-bottom:30px;font-size:16px}
     .cards{
-      display:grid;gap:16px;
+      display:grid;gap:20px;
       grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-      width:100%;max-width:800px;
-      margin:0 auto;
+      width:100%;max-width:800px;margin:0 auto;
     }
     .card{
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      padding:16px;border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      font-weight:700;font-size:18px;
-      color:#0b0d1c;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:var(--radius);
+      padding:20px;box-shadow:var(--shadow);
       transition:transform .2s;
+      text-decoration:none;
+      color:var(--text);
     }
     .card:hover{transform:translateY(-4px)}
-    @media(max-width:600px){
-      .card{font-size:16px;padding:14px}
+    .icon{
+      width:60px;height:60px;border-radius:50%;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 12px;font-size:28px;color:#fff;
+      box-shadow:0 0 15px #6e44ff80;
     }
+    .label{font-weight:700;font-size:18px}
     .tiply-fab{
       position:fixed;right:20px;bottom:20px;z-index:1000;
       background:linear-gradient(135deg,#9e88ff,#6e44ff);
@@ -59,13 +61,25 @@
 <body>
   <div class="logo"></div>
   <h1>AstroTrapez</h1>
-  <p>Twoje centrum obserwacji kosmosu – ISS, rozbłyski słoneczne i astrofotografia</p>
+  <p>Twoje centrum obserwacji kosmosu – ISS, rozbłyski i astrofotografia</p>
 
   <div class="cards">
-    <a class="card" href="iss/">🚀 ISS</a>
-    <a class="card" href="wyrzuty/">☀️ Wyrzuty</a>
-    <a class="card" href="galeria/">🛰️ Zdjęcia</a>
-    <a class="card" href="live/">🎥 Live</a>
+    <a class="card" href="iss/">
+      <div class="icon">🚀</div>
+      <div class="label">ISS</div>
+    </a>
+    <a class="card" href="wyrzuty/">
+      <div class="icon">☀️</div>
+      <div class="label">Wyrzuty</div>
+    </a>
+    <a class="card" href="galeria/">
+      <div class="icon">🛰️</div>
+      <div class="label">Zdjęcia</div>
+    </a>
+    <a class="card" href="live/">
+      <div class="icon">🎥</div>
+      <div class="label">Live</div>
+    </a>
   </div>
 
   <a class="tiply-fab" href="https://tipply.pl/@trap3zik" target="_blank" rel="noopener">💜 Wesprzyj</a>
