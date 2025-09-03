@@ -2,24 +2,258 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <title>Transmisje Live</title>
+  <title>Live — AstroTrapez</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="../css/styles.css" />
+
+  <!-- TikTok embed loader (potrzebny do kart profilu/wideo; live bywa blokowany w iframe) -->
+  <script async src="https://www.tiktok.com/embed.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#060712;--text:#e8ecff;--muted:#aab2d5;
+      --accent:#7aa2ff;--accent2:#6e44ff;
+      --border:rgba(255,255,255,.1);
+      --panel:rgba(255,255,255,.06);
+      --shadow:0 14px 35px rgba(0,0,0,.55);
+      --radius:16px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      min-height:100dvh; overflow-x:hidden;
+      font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      /* Fallback gradient + lekki fiolet */
+      background: radial-gradient(1400px 900px at 70% 25%, #2a2358 0%, transparent 60%), var(--bg);
+      position:relative;
+      padding:24px 16px 100px;
+    }
+    /* --- Proceduralne tło: mgławica + planety + gwiazdy --- */
+    body::before{
+      /* mgławica */
+      content:""; position:fixed; inset:0; z-index:-3;
+      background:
+        radial-gradient(800px 520px at 65% 35%, rgba(120,65,255,.35) 0%, transparent 60%),
+        radial-gradient(680px 480px at 30% 70%, rgba(60,120,255,.22) 0%, transparent 65%);
+      filter: blur(1px) saturate(110%);
+      opacity:.9;
+    }
+    /* planety */
+    .planet{position:fixed; z-index:-2; border-radius:50%; filter:saturate(110%) contrast(105%) drop-shadow(0 12px 40px rgba(0,0,0,.45))}
+    .p1{
+      width:190px; height:190px; top:8%; left:8%;
+      background:
+        radial-gradient(circle at 35% 35%, #ffffffaa 0 8%, transparent 9%),
+        radial-gradient(circle at 68% 70%, #ffffff88 0 6%, transparent 7%),
+        radial-gradient(circle at 30% 30%, #b8c4ff, 12%, #6a7bff 45%, #2a2f6a 70%, #171935 100%);
+    }
+    .p2{
+      width:140px; height:140px; bottom:10%; right:12%;
+      background:
+        radial-gradient(circle at 35% 35%, #ffffff90 0 7%, transparent 8%),
+        radial-gradient(circle at 30% 30%, #ffd5b3, 15%, #ff8a66 46%, #7a2c2c 72%, #231014 100%);
+    }
+    /* gwiazdy (3 warstwy, delikatny przesuw) */
+    .stars::before,.stars::after{
+      content:""; position:fixed; inset:-20% -20% -10% -20%; z-index:-1; pointer-events:none;
+      background:
+        radial-gradient(2px 2px at 10% 20%, #fff 40%, transparent 41%) repeat 350px 260px,
+        radial-gradient(2px 2px at 70% 30%, #b7c7ff 40%, transparent 41%) repeat 520px 340px,
+        radial-gradient(1.6px 1.6px at 85% 75%, #fff 40%, transparent 41%) repeat 640px 460px;
+      animation: drift 70s linear infinite;
+      opacity:.7;
+    }
+    .stars::after{ animation-duration: 120s; opacity:.5; }
+    @keyframes drift{ to{ transform:translate3d(-220px,-140px,0) } }
+
+    /* --- Layout nagłówka i kontentu --- */
+    .container{max-width:1120px; margin:0 auto}
+    .brand{display:flex; align-items:center; gap:12px; margin-bottom:10px}
+    .brand h1{font-size:34px; font-weight:900; letter-spacing:.3px; display:flex; gap:10px; align-items:center}
+    .brand svg{width:34px;height:34px; filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}
+    .subtitle{color:var(--muted); margin-bottom:18px}
+
+    .panel{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+
+    /* --- Pływające okienko LIVE --- */
+    .float-live{
+      position:fixed; right:20px; bottom:20px; width:360px; max-width:92vw;
+      background:rgba(10,12,26,.9); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow);
+      backdrop-filter: blur(6px);
+      display:flex; flex-direction:column; overflow:hidden; z-index:1000;
+      transform: translateZ(0);
+    }
+    .float-header{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 12px; gap:8px; cursor:grab; background:linear-gradient(135deg, #1a1e38, #15182e);
+      border-bottom:1px solid rgba(255,255,255,.06);
+      user-select:none;
+    }
+    .float-title{font-weight:800; font-size:14px; color:#dfe6ff}
+    .float-actions{display:flex; gap:6px}
+    .btn{
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); color:#e8ecff; font-weight:800;
+      padding:6px 9px; border-radius:999px; cursor:pointer;
+    }
+    .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#0b0d1c; border-color:transparent}
+    .float-body{padding:10px}
+    .float-body iframe{width:100%; height:210px; border:0; border-radius:10px; background:#000}
+
+    .notice{
+      text-align:center; color:#dfe6ff; font-size:14px; padding:10px 8px;
+      background:rgba(255,255,255,.05); border:1px dashed rgba(255,255,255,.14); border-radius:10px;
+    }
+
+    .minimized .float-body{ display:none }
+    .minimized{ width:auto }
+
+    /* CTA na środku (opcjonalne treści) */
+    .cta{margin-top:22px}
+    .cta a{color:#0b0d1c; text-decoration:none; font-weight:900; display:inline-block;
+      padding:10px 14px; border-radius:999px; background:linear-gradient(135deg,var(--accent),var(--accent2)); box-shadow:var(--shadow)}
+
+    /* responsywność */
+    @media(max-width:600px){
+      .brand h1{font-size:28px}
+      .float-body iframe{height:190px}
+    }
+  </style>
 </head>
 <body>
-  <div class="nav">
-    <div class="nav-inner container">
-      <div class="brand"><div class="logo"></div><h1>AstroTrapez</h1></div>
-      <div><a class="btn" href="../">⬅ Wróć</a></div>
+  <div class="stars"></div>
+  <div class="planet p1"></div>
+  <div class="planet p2"></div>
+
+  <div class="container">
+    <div class="brand">
+      <!-- teleskop -->
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 20h16M12 20v-6m7.5-6.5-7 3.5-3-6 7-3.5 3 6Z" stroke="#bcd1ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M6 16l3-2" stroke="#bcd1ff" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <h1>AstroTrapez — LIVE</h1>
+    </div>
+    <p class="subtitle">Pływające okienko z transmisją TikTok oraz ciemne tło z mgławicą i planetami (generowane w CSS).</p>
+
+    <div class="panel">
+      <h3>📺 Kanał na TikToku (@trap3z)</h3>
+      <div style="border-radius:12px; overflow:hidden; margin-top:10px">
+        <!-- profil/kreator — wyświetla siatkę i info; live w iframe bywa blokowany, więc okienko pływające ma fallback -->
+        <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@trap3z"
+                  data-unique-id="trap3z" data-embed-type="creator"
+                  data-embed-from="embed_page" style="max-width: 100%; min-width: 288px;">
+          <section><a target="_blank" href="https://www.tiktok.com/@trap3z">@trap3z</a></section>
+        </blockquote>
+      </div>
+
+      <div class="cta">
+        <a href="https://www.tiktok.com/@trap3z/live" target="_blank" rel="noopener">▶ Otwórz LIVE @trap3z</a>
+      </div>
     </div>
   </div>
 
-  <main class="container section">
-    <h2>🎥 Twoje transmisje</h2>
-    <p>Podmień w adresie poniżej <code>VIDEO_ID</code> na swój.</p>
-    <iframe src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe>
-  </main>
+  <!-- Pływające okienko z LIVE (draggable) -->
+  <div class="float-live" id="floatLive">
+    <div class="float-header" id="dragHandle" title="Przeciągnij, aby przenieść">
+      <div class="float-title">🔴 TikTok LIVE @trap3z</div>
+      <div class="float-actions">
+        <button class="btn" id="pinBtn" title="Przenieś do prawego-dolnego rogu">📌</button>
+        <button class="btn" id="minBtn" title="Minimalizuj / Przywróć">▁</button>
+        <a class="btn primary" href="https://www.tiktok.com/@trap3z/live" target="_blank" rel="noopener" title="Otwórz w nowej karcie">▶ Otwórz</a>
+      </div>
+    </div>
+    <div class="float-body">
+      <!-- Próba osadzenia: TikTok często blokuje iFrame dla LIVE (X-Frame-Options).
+           Jeśli się nie załaduje, użytkownik ma przycisk „Otwórz” oraz opis poniżej. -->
+      <iframe
+        src="https://www.tiktok.com/@trap3z/live"
+        allow="autoplay; encrypted-media; picture-in-picture"
+        referrerpolicy="no-referrer"
+        title="TikTok Live @trap3z"></iframe>
 
-  <a class="tiply-fab" href="https://tipply.pl/@trap3zik" target="_blank" rel="noopener">💜 Wesprzyj</a>
+      <div class="notice">
+        Jeśli odtwarzacz się nie wyświetla (TikTok blokuje iFrame), kliknij <strong>„▶ Otwórz”</strong> lub przycisk powyżej — LIVE otworzy się w aplikacji/nowej karcie.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Draggable floating window ---
+    (function() {
+      const box = document.getElementById('floatLive');
+      const handle = document.getElementById('dragHandle');
+      const minBtn = document.getElementById('minBtn');
+      const pinBtn = document.getElementById('pinBtn');
+
+      // Drag logic
+      let pos = {x:0, y:0}, start = {x:0, y:0}, dragging = false;
+
+      function onDown(e){
+        dragging = true;
+        handle.style.cursor = 'grabbing';
+        start.x = (e.touches ? e.touches[0].clientX : e.clientX);
+        start.y = (e.touches ? e.touches[0].clientY : e.clientY);
+        const rect = box.getBoundingClientRect();
+        pos.x = rect.left;
+        pos.y = rect.top;
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+        document.addEventListener('touchmove', onMove, {passive:false});
+        document.addEventListener('touchend', onUp);
+      }
+      function onMove(e){
+        if(!dragging) return;
+        const cx = (e.touches ? e.touches[0].clientX : e.clientX);
+        const cy = (e.touches ? e.touches[0].clientY : e.clientY);
+        const dx = cx - start.x;
+        const dy = cy - start.y;
+        let nx = pos.x + dx;
+        let ny = pos.y + dy;
+        // clamp in viewport
+        const maxX = window.innerWidth - box.offsetWidth - 6;
+        const maxY = window.innerHeight - box.offsetHeight - 6;
+        nx = Math.max(6, Math.min(maxX, nx));
+        ny = Math.max(6, Math.min(maxY, ny));
+        box.style.left = nx + 'px';
+        box.style.top  = ny + 'px';
+        box.style.right = 'auto';
+        box.style.bottom = 'auto';
+        e.preventDefault?.();
+      }
+      function onUp(){
+        dragging = false;
+        handle.style.cursor = 'grab';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onUp);
+      }
+
+      handle.addEventListener('mousedown', onDown);
+      handle.addEventListener('touchstart', onDown, {passive:true});
+
+      // Minimize / restore
+      minBtn.addEventListener('click', ()=>{
+        box.classList.toggle('minimized');
+      });
+
+      // Pin to bottom-right
+      pinBtn.addEventListener('click', ()=>{
+        box.style.left = 'auto';
+        box.style.top  = 'auto';
+        box.style.right = '20px';
+        box.style.bottom = '20px';
+      });
+    })();
+  </script>
 </body>
 </html>
