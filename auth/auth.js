@@ -1,4 +1,4 @@
-// ---- Firebase config (twój prawdziwy kod) ----
+// ---- Firebase config (Twój prawdziwy kod) ----
 const firebaseConfig = {
   apiKey: "AIzaSyDpZ556xcaHnOKeH9r_nV-AJNh7zQO-BHs",
   authDomain: "astrotrapez.firebaseapp.com",
@@ -24,7 +24,7 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
 
-// helpers
+// helpery
 const $ = (q) => document.querySelector(q);
 const setMsg = (el, text, ok=false) => {
   const n = $(el);
@@ -35,7 +35,7 @@ const setMsg = (el, text, ok=false) => {
   n.classList.add(ok ? 'ok' : 'err');
 };
 
-// elementy
+// elementy formularzy
 const loginEmail = $('#loginEmail');
 const loginPass  = $('#loginPass');
 const loginMsg   = $('#loginMsg');
