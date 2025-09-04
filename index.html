@@ -2,17 +2,17 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <title>AstroTrapez — live ISS, wyrzuty słoneczne, zdjęcia</title>
+  <title>AstroTrapez — live ISS, wyrzuty, zdjęcia</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Możesz zostawić swój zewnętrzny styles.css; poniższy STYLE tylko dopina layout -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+
   <style>
     :root{
-      --bg:#060712;--p:#0d1130;--panel:#121639;--text:#e8ecff;--muted:#aab2d5;
+      --bg:#060712;--panel:#121639;--text:#e8ecff;--muted:#aab2d5;
       --b:#ffffff16;--accent:#7aa2ff;--accent2:#6e44ff;--radius:16px;--shadow:0 20px 50px rgba(0,0,0,.55);
     }
     *{box-sizing:border-box;margin:0;padding:0}
@@ -20,25 +20,17 @@
       min-height:100dvh;background:radial-gradient(1300px 700px at 70% 15%, #2a2358 0%, transparent 60%),var(--bg);
       color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;padding:18px;
     }
-    .stars::before,.stars::after{
-      content:"";position:fixed;inset:-20%;z-index:-1;pointer-events:none;opacity:.75;
-      background:
-        radial-gradient(2px 2px at 12% 18%, #fff 42%, transparent 43%) repeat 360px 260px,
-        radial-gradient(1.8px 1.8px at 70% 30%, #bcd1ff 42%, transparent 43%) repeat 520px 340px,
-        radial-gradient(1.4px 1.4px at 86% 72%, #fff 42%, transparent 43%) repeat 640px 460px;
-      animation:drift 90s linear infinite;
-    }
-    .stars::after{opacity:.5;animation-duration:140s}
-    @keyframes drift{to{transform:translate3d(-220px,-150px,0)}}
-
     .container{max-width:1200px;margin:0 auto}
     .brand{display:flex;align-items:center;gap:12px;margin-bottom:10px}
     .brand a{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none}
     .brand svg{width:34px;height:34px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.4))}
     .brand h1{font-weight:900;font-size:28px}
-    .subtitle{color:var(--muted);margin:6px 0 14px}
+    .badge{margin-left:auto}
+    .btn{border:1px solid var(--b);background:#151a36;color:var(--text);padding:8px 12px;border-radius:999px;cursor:pointer;font-weight:800}
+    .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#0b0d1c}
+    .muted{color:var(--muted)}
 
-    .tabs{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+    .tabs{display:flex;gap:10px;margin:8px 0 16px;flex-wrap:wrap}
     .tab{padding:8px 14px;border:1px solid var(--b);border-radius:999px;background:#14183b;color:var(--text);text-decoration:none;font-weight:800}
     .tab:hover{opacity:.9}
 
@@ -47,7 +39,6 @@
 
     .card{background:var(--panel);border:1px solid var(--b);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
     .card h3{font-size:16px;margin-bottom:10px}
-    .frame{width:100%;height:320px;border:0;border-radius:12px;background:#0b0f25}
     .bigframe{width:100%;height:380px;border:0;border-radius:12px;background:#0b0f25}
 
     .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
@@ -57,21 +48,14 @@
 
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 
-    .btn{border:1px solid var(--b);background:#151a36;color:var(--text);padding:8px 12px;border-radius:999px;cursor:pointer;font-weight:800}
-    .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#0b0d1c}
-    .muted{color:var(--muted)}
-
-    /* Live switch */
     .switch{display:flex;gap:8px;margin-bottom:10px}
     .chip{padding:6px 10px;border:1px solid var(--b);border-radius:999px;background:#12163a;cursor:pointer}
     .chip.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b0d1c;border:none}
 
     #map{width:100%;height:420px;border-radius:12px;overflow:hidden}
-    .badge{margin-left:auto}
   </style>
 </head>
 <body>
-  <div class="stars"></div>
   <div class="container">
 
     <!-- BRAND + pasek logowania -->
@@ -84,13 +68,12 @@
         <h1>AstroTrapez</h1>
       </a>
 
-      <!-- 🔑 pasek użytkownika -->
       <span id="userBadge" class="muted badge"></span>
       <a id="loginLink" class="btn" href="/auth/" style="margin-left:8px">Zaloguj</a>
       <button id="logoutLink" class="btn" style="display:none;margin-left:8px">Wyloguj</button>
     </div>
 
-    <!-- Szybkie zakładki -->
+    <!-- Zakładki -->
     <div class="tabs">
       <a class="tab" href="/iss/">🚀 ISS</a>
       <a class="tab" href="/wyrzuty/">☀️ Wyrzuty</a>
@@ -98,24 +81,23 @@
       <a class="tab" href="/live/">🎥 Live</a>
     </div>
 
-    <!-- GŁÓWNY UKŁAD: lewa kolumna TikTok, prawa kafelki -->
+    <!-- GŁÓWNY UKŁAD -->
     <div class="grid">
-      <!-- Lewa kolumna -->
+      <!-- TikTok profil -->
       <section class="card">
         <h3>📺 Kanał na TikToku</h3>
-        <!-- Uwaga: TikTok często blokuje osadzanie profilu w iframe.
-             Zostawiam iframe + przycisk do profilu. -->
-        <iframe class="frame"
-          src="https://www.tiktok.com/@trap3z"
-          referrerpolicy="origin"
-          sandbox="allow-scripts allow-same-origin allow-popups"
-          title="TikTok @trap3z"></iframe>
+        <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@trap3z"
+                  data-unique-id="trap3z" data-embed-type="creator"
+                  data-embed-from="embed_page"
+                  style="max-width: 100%; min-width: 288px;">
+          <section><a target="_blank" href="https://www.tiktok.com/@trap3z">@trap3z</a></section>
+        </blockquote>
         <div class="row" style="margin-top:10px">
           <a class="btn primary" target="_blank" rel="noopener" href="https://www.tiktok.com/@trap3z">Otwórz profil @trap3z</a>
         </div>
       </section>
 
-      <!-- Prawa kolumna – kafelki do podstron -->
+      <!-- Kafelki -->
       <section class="card">
         <h3>🧭 Kafelki z podfolderami</h3>
         <div class="tiles" style="margin-top:8px">
@@ -127,7 +109,7 @@
       </section>
     </div>
 
-    <!-- LIVE: TikTok / ISS -->
+    <!-- LIVE -->
     <section class="card" style="margin-top:18px">
       <h3>🔴 Live z TikToka i ISS</h3>
       <div class="switch" role="tablist" aria-label="Przełącznik live">
@@ -135,22 +117,15 @@
         <button class="chip" id="btnTT">TikTok Live</button>
       </div>
 
-      <!-- ISS (YouTube) -->
       <iframe id="issLive" class="bigframe"
-        src="https://www.youtube.com/embed/ybAUylnO80M?autoplay=0&rel=0&modestbranding=1"
+        src="https://www.youtube.com/embed/fO9e9jnhYK8?autoplay=1&mute=1&rel=0&modestbranding=1"
         title="ISS Live stream"
-        allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen"
-      ></iframe>
+        allow="autoplay; encrypted-media; picture-in-picture"
+        allowfullscreen></iframe>
 
-      <!-- TikTok Live – jeśli TikTok zablokuje iframe, pokażemy tylko link -->
       <div id="ttLiveWrap" style="display:none">
-        <iframe class="bigframe"
-          src="https://www.tiktok.com/@trap3z/live"
-          referrerpolicy="origin"
-          sandbox="allow-scripts allow-same-origin allow-popups"
-          title="TikTok Live @trap3z"></iframe>
         <div class="row" style="margin-top:10px">
-          <a class="btn primary" target="_blank" rel="noopener" href="https://www.tiktok.com/@trap3z/live">Otwórz TikTok LIVE</a>
+          <a class="btn primary" target="_blank" rel="noopener" href="https://www.tiktok.com/@trap3z/live">▶ Otwórz TikTok LIVE</a>
         </div>
       </div>
     </section>
@@ -163,58 +138,30 @@
 
   </div>
 
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script async src="https://www.tiktok.com/embed.js"></script>
 
-  <!-- Live switch + Mapa ISS -->
   <script>
-    // Przełącznik Live
-    const btnISS = document.getElementById('btnISS');
-    const btnTT  = document.getElementById('btnTT');
-    const issLive = document.getElementById('issLive');
-    const ttWrap  = document.getElementById('ttLiveWrap');
+    // Switch live
+    const btnISS=document.getElementById('btnISS'),btnTT=document.getElementById('btnTT');
+    const issLive=document.getElementById('issLive'),ttWrap=document.getElementById('ttLiveWrap');
+    btnISS.addEventListener('click',()=>{btnISS.classList.add('active');btnTT.classList.remove('active');issLive.style.display='';ttWrap.style.display='none';});
+    btnTT.addEventListener('click',()=>{btnTT.classList.add('active');btnISS.classList.remove('active');issLive.style.display='none';ttWrap.style.display='';});
 
-    btnISS.addEventListener('click', ()=>{
-      btnISS.classList.add('active'); btnISS.setAttribute('aria-selected','true');
-      btnTT.classList.remove('active'); btnTT.setAttribute('aria-selected','false');
-      issLive.style.display = ''; ttWrap.style.display = 'none';
-    });
-    btnTT.addEventListener('click', ()=>{
-      btnTT.classList.add('active'); btnTT.setAttribute('aria-selected','true');
-      btnISS.classList.remove('active'); btnISS.setAttribute('aria-selected','false');
-      issLive.style.display = 'none'; ttWrap.style.display = '';
-    });
-
-    // Mapa ISS (wheretheiss.at)
-    const map = L.map('map',{ zoomControl:true, worldCopyJump:true }).setView([0,0], 3);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-      attribution:'&copy; OpenStreetMap'
-    }).addTo(map);
-
-    const issIcon = L.icon({
-      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      iconSize: [25,41], iconAnchor:[12,41], popupAnchor:[1,-34],
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
-    });
-
-    const marker = L.marker([0,0],{icon:issIcon}).addTo(map).bindPopup('ISS');
-    const track = L.polyline([], {color:'#7aa2ff', weight:3, opacity:.8}).addTo(map);
-
+    // Map ISS
+    const map=L.map('map').setView([0,0],3);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap'}).addTo(map);
+    const issIcon=L.icon({iconUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',iconSize:[25,41],iconAnchor:[12,41],shadowUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'});
+    const marker=L.marker([0,0],{icon:issIcon}).addTo(map).bindPopup('ISS');
+    const track=L.polyline([], {color:'#7aa2ff',weight:3,opacity:.8}).addTo(map);
     async function updateISS(){
-      try{
-        const res = await fetch('https://api.wheretheiss.at/v1/satellites/25544');
-        const d = await res.json();
-        const lat = d.latitude, lon = d.longitude;
-        marker.setLatLng([lat,lon]);
-        track.addLatLng([lat,lon]);
-        map.setView([lat,lon], map.getZoom()<3?3:map.getZoom());
-      }catch(e){/* cicho */}
+      try{const r=await fetch('https://api.wheretheiss.at/v1/satellites/25544');const d=await r.json();const lat=d.latitude,lon=d.longitude;
+        marker.setLatLng([lat,lon]);track.addLatLng([lat,lon]);}catch(e){}
     }
-    updateISS();
-    setInterval(updateISS, 5000);
+    updateISS();setInterval(updateISS,5000);
   </script>
 
-  <!-- 🔑 Pasek użytkownika (Firebase Auth) -->
+  <!-- Firebase login bar -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -229,26 +176,11 @@
       measurementId: "G-1FYDH1YYR8"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    const userBadge = document.getElementById('userBadge');
-    const loginLink = document.getElementById('loginLink');
-    const logoutLink = document.getElementById('logoutLink');
-
-    onAuthStateChanged(auth, user => {
-      if(user){
-        userBadge.textContent = `Witaj, ${user.displayName || user.email}`;
-        loginLink.style.display = 'none';
-        logoutLink.style.display = 'inline-block';
-      }else{
-        userBadge.textContent = '';
-        loginLink.style.display = 'inline-block';
-        logoutLink.style.display = 'none';
-      }
-    });
-
-    logoutLink?.addEventListener('click', ()=> signOut(auth));
+    const app=initializeApp(firebaseConfig),auth=getAuth(app);
+    const b=document.getElementById('userBadge'),l=document.getElementById('loginLink'),o=document.getElementById('logoutLink');
+    onAuthStateChanged(auth,u=>{if(u){b.textContent=`Witaj, ${u.displayName||u.email}`;l.style.display='none';o.style.display='inline-block';}
+                                else{b.textContent='';l.style.display='inline-block';o.style.display='none';}});
+    o?.addEventListener('click',()=>signOut(auth));
   </script>
 </body>
 </html>
