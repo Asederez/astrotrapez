@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <title>Logowanie i rejestracja — AstroTrapez</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="styles.css?v=1" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="bg-stars"></div>
+  <div class="wrap">
+    <header class="brand">
+      <a href="/" class="home-link" aria-label="Strona główna AstroTrapez">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="logo">
+          <path d="M4 20h16M12 20v-6m7.5-6.5-7 3.5-3-6 7-3.5 3 6Z" stroke="#bcd1ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 16l3-2" stroke="#bcd1ff" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <h1>AstroTrapez — logowanie</h1>
+      </a>
+      <button id="goBack" class="btn">← Wróć</button>
+    </header>
+
+    <p class="subtitle">Zaloguj się lub załóż konto, aby korzystać z dodatkowych funkcji.</p>
+
+    <main class="grid">
+      <!-- Logowanie -->
+      <section class="card">
+        <h2>🔐 Zaloguj się</h2>
+        <label for="loginEmail">E-mail</label>
+        <input id="loginEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+        <label for="loginPass">Hasło</label>
+        <input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" />
+        <div class="row">
+          <button id="loginBtn" class="btn primary">Zaloguj</button>
+          <button id="googleBtn" class="btn">Google</button>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button id="forgotBtn" class="btn ghost">Przypomnij hasło</button>
+          <button id="verifyBtn" class="btn ghost">Wyślij weryfikację e-mail</button>
+        </div>
+        <div id="loginMsg" class="msg"></div>
+      </section>
+
+      <!-- Rejestracja -->
+      <section class="card">
+        <h2>📝 Załóż konto</h2>
+        <label for="regName">Nazwa wyświetlana (opcjonalnie)</label>
+        <input id="regName" type="text" placeholder="np. AstroFan" />
+        <label for="regEmail">E-mail</label>
+        <input id="regEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+        <label for="regPass">Hasło (min. 6 znaków)</label>
+        <input id="regPass" type="password" placeholder="••••••••" autocomplete="new-password" />
+        <div class="row">
+          <button id="regBtn" class="btn primary">Utwórz konto</button>
+        </div>
+        <div id="regMsg" class="msg"></div>
+      </section>
+    </main>
+
+    <section class="card" style="margin-top:18px">
+      <h2>ℹ️ Stan</h2>
+      <div id="whoami" class="muted">Nie zalogowano</div>
+      <div class="row" style="margin-top:10px">
+        <button id="logoutBtn" class="btn">Wyloguj</button>
+        <button id="toApp" class="btn primary">Przejdź na stronę główną</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Firebase + skrypt logiki -->
+  <script type="module" src="auth.js?v=1"></script>
+
+  <script>
+    // Lokalny „Wróć”
+    const backBtn = document.getElementById('goBack');
+    if(backBtn){
+      backBtn.addEventListener('click', ()=>{
+        const same = document.referrer && new URL(document.referrer).origin === location.origin;
+        if (same && history.length > 1) history.back(); else location.href = '/';
+      });
+    }
+  </script>
+</body>
+</html>
