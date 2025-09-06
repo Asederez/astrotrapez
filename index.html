@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 
   <style>
     :root{
@@ -29,29 +29,22 @@
     .btn{border:1px solid var(--b);background:#151a36;color:var(--text);padding:8px 12px;border-radius:999px;cursor:pointer;font-weight:800}
     .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#0b0d1c}
     .muted{color:var(--muted)}
-
     .tabs{display:flex;gap:10px;margin:8px 0 16px;flex-wrap:wrap}
     .tab{padding:8px 14px;border:1px solid var(--b);border-radius:999px;background:#14183b;color:var(--text);text-decoration:none;font-weight:800}
     .tab:hover{opacity:.9}
-
     .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
     @media(max-width:980px){.grid{grid-template-columns:1fr}}
-
     .card{background:var(--panel);border:1px solid var(--b);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
     .card h3{font-size:16px;margin-bottom:10px}
-    .bigframe{width:100%;height:380px;border:0;border-radius:12px;background:#0b0f25}
-
     .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
     .tile{display:flex;align-items:center;gap:10px;padding:16px;border:1px solid var(--b);border-radius:14px;background:#151a3b;text-decoration:none;color:var(--text)}
     .tile .icon{font-size:20px}
     .tile h2{font-size:18px}
-
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-
     .switch{display:flex;gap:8px;margin-bottom:10px}
     .chip{padding:6px 10px;border:1px solid var(--b);border-radius:999px;background:#12163a;cursor:pointer}
     .chip.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b0d1c;border:none}
-
+    .bigframe{width:100%;height:380px;border:0;border-radius:12px;background:#0b0f25}
     #map{width:100%;height:420px;border-radius:12px;overflow:hidden}
   </style>
 </head>
@@ -67,7 +60,6 @@
         </svg>
         <h1>AstroTrapez</h1>
       </a>
-
       <span id="userBadge" class="muted badge"></span>
       <a id="loginLink" class="btn" href="/auth/" style="margin-left:8px">Zaloguj</a>
       <button id="logoutLink" class="btn" style="display:none;margin-left:8px">Wyloguj</button>
@@ -109,7 +101,7 @@
       </section>
     </div>
 
-    <!-- LIVE -->
+    <!-- LIVE (ISS + TikTok Live przycisk) -->
     <section class="card" style="margin-top:18px">
       <h3>🔴 Live z TikToka i ISS</h3>
       <div class="switch" role="tablist" aria-label="Przełącznik live">
@@ -117,12 +109,16 @@
         <button class="chip" id="btnTT">TikTok Live</button>
       </div>
 
-      <iframe id="issLive" class="bigframe"
-        src="https://www.youtube.com/embed/xRPjKQtRXR8?autoplay=1&mute=1&rel=0&modestbranding=1"
-        title="ISS Live stream"
-        allow="autoplay; encrypted-media; picture-in-picture"
-        allowfullscreen></iframe>
+      <!-- ISS: kontener z automatycznym fallbackiem -->
+      <div id="issLive" class="bigframe" style="padding:0;overflow:hidden">
+        <div id="issPlayer" style="width:100%;height:100%"></div>
+      </div>
+      <div id="issFallback" style="display:none;margin-top:10px">
+        <a class="btn primary" target="_blank" rel="noopener"
+           href="https://www.youtube.com/results?search_query=iss+live">▶ Otwórz ISS LIVE na YouTube</a>
+      </div>
 
+      <!-- TikTok LIVE – otwierany w nowej karcie -->
       <div id="ttLiveWrap" style="display:none">
         <div class="row" style="margin-top:10px">
           <a class="btn primary" target="_blank" rel="noopener" href="https://www.tiktok.com/@trap3z/live">▶ Otwórz TikTok LIVE</a>
@@ -138,30 +134,85 @@
 
   </div>
 
+  <!-- Leaflet -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <!-- TikTok embed -->
   <script async src="https://www.tiktok.com/embed.js"></script>
+  <!-- YouTube Iframe API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
 
   <script>
-    // Switch live
+    // Przełącznik Live (ISS / TikTok)
     const btnISS=document.getElementById('btnISS'),btnTT=document.getElementById('btnTT');
-    const issLive=document.getElementById('issLive'),ttWrap=document.getElementById('ttLiveWrap');
-    btnISS.addEventListener('click',()=>{btnISS.classList.add('active');btnTT.classList.remove('active');issLive.style.display='';ttWrap.style.display='none';});
-    btnTT.addEventListener('click',()=>{btnTT.classList.add('active');btnISS.classList.remove('active');issLive.style.display='none';ttWrap.style.display='';});
+    const issBox=document.getElementById('issLive'),ttWrap=document.getElementById('ttLiveWrap');
+    btnISS.addEventListener('click',()=>{btnISS.classList.add('active');btnTT.classList.remove('active');issBox.style.display='';ttWrap.style.display='none';});
+    btnTT.addEventListener('click',()=>{btnTT.classList.add('active');btnISS.classList.remove('active');issBox.style.display='none';ttWrap.style.display='';});
 
-    // Map ISS
+    // Mapa ISS
     const map=L.map('map').setView([0,0],3);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap'}).addTo(map);
     const issIcon=L.icon({iconUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',iconSize:[25,41],iconAnchor:[12,41],shadowUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'});
     const marker=L.marker([0,0],{icon:issIcon}).addTo(map).bindPopup('ISS');
     const track=L.polyline([], {color:'#7aa2ff',weight:3,opacity:.8}).addTo(map);
     async function updateISS(){
-      try{const r=await fetch('https://api.wheretheiss.at/v1/satellites/25544');const d=await r.json();const lat=d.latitude,lon=d.longitude;
-        marker.setLatLng([lat,lon]);track.addLatLng([lat,lon]);}catch(e){}
+      try{
+        const r=await fetch('https://api.wheretheiss.at/v1/satellites/25544');
+        const d=await r.json(); const lat=d.latitude, lon=d.longitude;
+        marker.setLatLng([lat,lon]); track.addLatLng([lat,lon]);
+      }catch(e){}
     }
-    updateISS();setInterval(updateISS,5000);
+    updateISS(); setInterval(updateISS,5000);
+
+    // ====== ISS LIVE z fallbackiem (BEZ „Sen”) ======
+    // Kandydaci (kolejność ważna) — bez fO9e9jnhYK8:
+    // NASA TV, Space Videos ISS, ISS Views (alternatywy)
+    const ISS_STREAMS = [
+      '21X5lGlDOfg', // NASA TV Public-Education (często live)
+      '86YLFOog4GM', // Space Videos — ISS live
+      'Dd7FixvoKBw', // Live Earth/ISS alternatywa
+      'RT6fS8PuklQ'  // rezerwowy stream (zmienny)
+    ];
+    let issIndex = 0, issPlayer;
+
+    // callback z Iframe API
+    function onYouTubeIframeAPIReady(){
+      createIssPlayer();
+    }
+    function createIssPlayer(){
+      const vid = ISS_STREAMS[issIndex];
+      issPlayer = new YT.Player('issPlayer', {
+        host: 'https://www.youtube-nocookie.com',
+        videoId: vid,
+        playerVars: { autoplay:1, mute:1, rel:0, modestbranding:1, playsinline:1 },
+        events: {
+          onReady: e => { try{ e.target.playVideo(); }catch(_){} },
+          onError: handleIssError,
+          onStateChange: e => {
+            if (e.data === YT.PlayerState.UNSTARTED) {
+              setTimeout(()=>{
+                try{
+                  if (e.target.getPlayerState() === YT.PlayerState.UNSTARTED) handleIssError();
+                }catch(_){}
+              }, 2000);
+            }
+          }
+        }
+      });
+    }
+    function handleIssError(){
+      issIndex++;
+      if (issIndex < ISS_STREAMS.length){
+        try{ issPlayer.destroy(); }catch(_){}
+        createIssPlayer();
+      } else {
+        document.getElementById('issLive').style.display='none';
+        document.getElementById('issFallback').style.display='block';
+      }
+    }
+    // ================================================
   </script>
 
-  <!-- Firebase login bar -->
+  <!-- Firebase pasek użytkownika -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -176,11 +227,25 @@
       measurementId: "G-1FYDH1YYR8"
     };
 
-    const app=initializeApp(firebaseConfig),auth=getAuth(app);
-    const b=document.getElementById('userBadge'),l=document.getElementById('loginLink'),o=document.getElementById('logoutLink');
-    onAuthStateChanged(auth,u=>{if(u){b.textContent=`Witaj, ${u.displayName||u.email}`;l.style.display='none';o.style.display='inline-block';}
-                                else{b.textContent='';l.style.display='inline-block';o.style.display='none';}});
-    o?.addEventListener('click',()=>signOut(auth));
+    const app=initializeApp(firebaseConfig);
+    const auth=getAuth(app);
+
+    const userBadge=document.getElementById('userBadge');
+    const loginLink=document.getElementById('loginLink');
+    const logoutLink=document.getElementById('logoutLink');
+
+    onAuthStateChanged(auth, user=>{
+      if(user){
+        userBadge.textContent=`Witaj, ${user.displayName || user.email}`;
+        loginLink.style.display='none';
+        logoutLink.style.display='inline-block';
+      }else{
+        userBadge.textContent='';
+        loginLink.style.display='inline-block';
+        logoutLink.style.display='none';
+      }
+    });
+    logoutLink?.addEventListener('click',()=>signOut(auth));
   </script>
 </body>
 </html>
