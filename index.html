@@ -126,10 +126,11 @@
       </div>
     </section>
 
-    <!-- MAPA ISS -->
+    <!-- MAPA ISS (hybryda) -->
     <section class="card" style="margin-top:18px">
       <h3>🗺️ Mapa ISS</h3>
       <div id="map"></div>
+      <div id="mapNote" class="muted" style="margin-top:8px"></div>
     </section>
 
   </div>
@@ -148,52 +149,86 @@
     btnISS.addEventListener('click',()=>{btnISS.classList.add('active');btnTT.classList.remove('active');issBox.style.display='';ttWrap.style.display='none';});
     btnTT.addEventListener('click',()=>{btnTT.classList.add('active');btnISS.classList.remove('active');issBox.style.display='none';ttWrap.style.display='';});
 
-    // Mapa ISS
+    // ===== Mapa ISS (hybrydowe źródła) =====
     const map=L.map('map').setView([0,0],3);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap'}).addTo(map);
-    const issIcon=L.icon({iconUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',iconSize:[25,41],iconAnchor:[12,41],shadowUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'});
+    const issIcon=L.icon({
+      iconUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      iconSize:[25,41],iconAnchor:[12,41],
+      shadowUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+    });
     const marker=L.marker([0,0],{icon:issIcon}).addTo(map).bindPopup('ISS');
     const track=L.polyline([], {color:'#7aa2ff',weight:3,opacity:.8}).addTo(map);
+    const mapNote=document.getElementById('mapNote');
+    let firstFix=true;
+
+    async function fetchWithTimeout(url, ms=4000){
+      const ctl=new AbortController();
+      const t=setTimeout(()=>ctl.abort(),ms);
+      try{ return await fetch(url,{signal:ctl.signal}); }
+      finally{ clearTimeout(t); }
+    }
     async function updateISS(){
+      // 1) wheretheiss.at
       try{
-        const r=await fetch('https://api.wheretheiss.at/v1/satellites/25544');
-        const d=await r.json(); const lat=d.latitude, lon=d.longitude;
-        marker.setLatLng([lat,lon]); track.addLatLng([lat,lon]);
+        const r=await fetchWithTimeout('https://api.wheretheiss.at/v1/satellites/25544');
+        if(r.ok){
+          const d=await r.json();
+          setPos(d.latitude,d.longitude);
+          mapNote.textContent='';
+          return;
+        }
       }catch(e){}
+
+      // 2) open-notify (fallback)
+      try{
+        const r2=await fetchWithTimeout('https://api.open-notify.org/iss-now.json');
+        if(r2.ok){
+          const d2=await r2.json();
+          const lat=parseFloat(d2?.iss_position?.latitude);
+          const lon=parseFloat(d2?.iss_position?.longitude);
+          if(Number.isFinite(lat)&&Number.isFinite(lon)){
+            setPos(lat,lon);
+            mapNote.textContent='Korzystam z zapasowego źródła pozycji (open-notify).';
+            return;
+          }
+        }
+      }catch(e){}
+
+      mapNote.textContent='Brak aktualnych danych o pozycji ISS. Spróbuję ponownie…';
+    }
+    function setPos(lat,lon){
+      marker.setLatLng([lat,lon]); track.addLatLng([lat,lon]);
+      if(firstFix){ map.setView([lat,lon],3); firstFix=false; }
     }
     updateISS(); setInterval(updateISS,5000);
 
-    // ====== ISS LIVE z fallbackiem (BEZ „Sen”) ======
-    // Kandydaci (kolejność ważna) — bez fO9e9jnhYK8:
-    // NASA TV, Space Videos ISS, ISS Views (alternatywy)
-    const ISS_STREAMS = [
-      '21X5lGlDOfg', // NASA TV Public-Education (często live)
+    // ===== ISS LIVE z fallbackiem (BEZ „Sen”) =====
+    const ISS_STREAMS=[
+      '21X5lGlDOfg', // NASA TV Public/Education
       '86YLFOog4GM', // Space Videos — ISS live
-      'Dd7FixvoKBw', // Live Earth/ISS alternatywa
-      'RT6fS8PuklQ'  // rezerwowy stream (zmienny)
+      'Dd7FixvoKBw', // Alternatywny „Earth/ISS view”
+      'RT6fS8PuklQ'  // Rezerwowy
     ];
-    let issIndex = 0, issPlayer;
+    let issIndex=0, issPlayer;
 
-    // callback z Iframe API
-    function onYouTubeIframeAPIReady(){
-      createIssPlayer();
-    }
+    function onYouTubeIframeAPIReady(){ createIssPlayer(); }
     function createIssPlayer(){
-      const vid = ISS_STREAMS[issIndex];
-      issPlayer = new YT.Player('issPlayer', {
-        host: 'https://www.youtube-nocookie.com',
-        videoId: vid,
-        playerVars: { autoplay:1, mute:1, rel:0, modestbranding:1, playsinline:1 },
-        events: {
-          onReady: e => { try{ e.target.playVideo(); }catch(_){} },
-          onError: handleIssError,
-          onStateChange: e => {
-            if (e.data === YT.PlayerState.UNSTARTED) {
+      const vid=ISS_STREAMS[issIndex];
+      issPlayer=new YT.Player('issPlayer',{
+        host:'https://www.youtube-nocookie.com',
+        videoId:vid,
+        playerVars:{autoplay:1,mute:1,rel:0,modestbranding:1,playsinline:1},
+        events:{
+          onReady:e=>{ try{ e.target.playVideo(); }catch(_){} },
+          onError:handleIssError,
+          onStateChange:e=>{
+            if(e.data===YT.PlayerState.UNSTARTED){
               setTimeout(()=>{
                 try{
-                  if (e.target.getPlayerState() === YT.PlayerState.UNSTARTED) handleIssError();
+                  if(e.target.getPlayerState()===YT.PlayerState.UNSTARTED) handleIssError();
                 }catch(_){}
-              }, 2000);
+              },2000);
             }
           }
         }
@@ -201,15 +236,14 @@
     }
     function handleIssError(){
       issIndex++;
-      if (issIndex < ISS_STREAMS.length){
+      if(issIndex<ISS_STREAMS.length){
         try{ issPlayer.destroy(); }catch(_){}
         createIssPlayer();
-      } else {
+      }else{
         document.getElementById('issLive').style.display='none';
         document.getElementById('issFallback').style.display='block';
       }
     }
-    // ================================================
   </script>
 
   <!-- Firebase pasek użytkownika -->
