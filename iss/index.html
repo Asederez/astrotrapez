@@ -4,43 +4,31 @@
   <meta charset="utf-8" />
   <title>AstroTrapez — ISS live + mapa</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
-
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <style>
-    :root{
-      --bg:#060712;--panel:#121639;--text:#e8ecff;--muted:#aab2d5;
-      --b:#ffffff16;--radius:16px;--shadow:0 20px 50px rgba(0,0,0,.55);
-    }
+    :root{--bg:#060712;--panel:#121639;--text:#e8ecff;--muted:#aab2d5;--b:#ffffff16;--radius:16px;--shadow:0 20px 50px rgba(0,0,0,.55)}
     *{box-sizing:border-box;margin:0;padding:0}
-    body{
-      min-height:100dvh;background:radial-gradient(1300px 700px at 70% 15%, #2a2358 0%, transparent 60%),var(--bg);
-      color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;padding:18px;
-    }
+    body{min-height:100dvh;background:radial-gradient(1300px 700px at 70% 15%, #2a2358 0%, transparent 60%),var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;padding:18px}
     .wrap{max-width:1200px;margin:0 auto}
     .brand{display:flex;align-items:center;gap:12px;margin-bottom:12px}
     .brand a{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none}
-    .brand svg{width:30px;height:30px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.4))}
+    .brand svg{width:30px;height:30px}
     .brand h1{font-weight:900;font-size:26px}
-    .btn{border:1px solid var(--b);background:#151a36;color:var(--text);padding:8px 12px;border-radius:999px;cursor:pointer;font-weight:800}
-    .muted{color:var(--muted)}
-    .badge{margin-left:auto}
-
+    .badge{margin-left:auto;color:var(--muted)}
+    .btn{border:1px solid var(--b);background:#151a36;color:#e8ecff;padding:8px 12px;border-radius:999px;cursor:pointer;font-weight:800}
+    .card{background:var(--panel);border:1px solid var(--b);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:16px}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
     @media(max-width:980px){.grid{grid-template-columns:1fr}}
-
-    .card{background:var(--panel);border:1px solid var(--b);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
-    .card h2{font-size:18px;margin-bottom:10px}
-    iframe.live{width:100%;height:420px;border:0;border-radius:12px;background:#0b0f25}
+    .bigframe{width:100%;height:420px;border:0;border-radius:12px;background:#0b0f25}
     #map{width:100%;height:420px;border-radius:12px;overflow:hidden}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <!-- Nagłówek + pasek logowania -->
+    <!-- Nagłówek + logowanie -->
     <div class="brand">
       <a href="/" aria-label="Strona główna">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -49,7 +37,7 @@
         </svg>
         <h1>AstroTrapez — ISS</h1>
       </a>
-      <span id="userBadge" class="muted badge"></span>
+      <span id="userBadge" class="badge"></span>
       <a id="loginLink" class="btn" href="/auth/" style="margin-left:8px">Zaloguj</a>
       <button id="logoutLink" class="btn" style="display:none;margin-left:8px">Wyloguj</button>
     </div>
@@ -57,16 +45,20 @@
     <!-- Dwie kolumny: live + mapa -->
     <div class="grid">
       <section class="card">
-        <h2>🚀 ISS — transmisja na żywo</h2>
-        <iframe class="live"
-          src="https://www.youtube.com/embed/fO9e9jnhYK8?autoplay=1&mute=1&rel=0&modestbranding=1"
-          title="ISS Live (Sen)"
-          allow="autoplay; encrypted-media; picture-in-picture"
-          allowfullscreen></iframe>
+        <h2 style="margin-bottom:8px">🚀 ISS — transmisja na żywo</h2>
+
+        <!-- ODTWARZACZ z fallbackiem (YouTube Iframe API) -->
+        <div id="issLive" class="bigframe" style="padding:0;overflow:hidden">
+          <div id="issPlayer" style="width:100%;height:100%"></div>
+        </div>
+        <div id="issFallback" style="display:none;margin-top:10px">
+          <a class="btn" target="_blank" rel="noopener"
+             href="https://www.youtube.com/results?search_query=iss+live">▶ Otwórz ISS LIVE na YouTube</a>
+        </div>
       </section>
 
       <section class="card">
-        <h2>🗺️ Mapa położenia ISS</h2>
+        <h2 style="margin-bottom:8px">🗺️ Mapa położenia ISS</h2>
         <div id="map"></div>
       </section>
     </div>
@@ -74,30 +66,68 @@
 
   <!-- Leaflet -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <!-- YouTube Iframe API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+
   <script>
-    // Mapa ISS
-    const map = L.map('map',{ worldCopyJump:true }).setView([0,0], 3);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution:'&copy; OpenStreetMap' }).addTo(map);
-
-    const issIcon = L.icon({
-      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      iconSize: [25,41], iconAnchor:[12,41], popupAnchor:[1,-34],
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
-    });
-
-    const marker = L.marker([0,0], {icon: issIcon}).addTo(map).bindPopup('ISS');
-    const track  = L.polyline([], {color:'#7aa2ff', weight:3, opacity:.9}).addTo(map);
-
+    // ===== Mapa ISS =====
+    const map=L.map('map',{worldCopyJump:true}).setView([0,0],3);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap'}).addTo(map);
+    const issIcon=L.icon({iconUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',iconSize:[25,41],iconAnchor:[12,41],shadowUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'});
+    const marker=L.marker([0,0],{icon:issIcon}).addTo(map).bindPopup('ISS');
+    const track=L.polyline([], {color:'#7aa2ff',weight:3,opacity:.9}).addTo(map);
     async function tick(){
       try{
-        const r = await fetch('https://api.wheretheiss.at/v1/satellites/25544');
-        const d = await r.json();
-        const lat = d.latitude, lon = d.longitude;
-        marker.setLatLng([lat,lon]);
-        track.addLatLng([lat,lon]);
-      }catch(e){/* cisza */}
+        const r=await fetch('https://api.wheretheiss.at/v1/satellites/25544');
+        const d=await r.json(); marker.setLatLng([d.latitude,d.longitude]); track.addLatLng([d.latitude,d.longitude]);
+      }catch(e){}
     }
-    tick(); setInterval(tick, 5000);
+    tick(); setInterval(tick,5000);
+
+    // ===== ISS LIVE (auto-fallback, BEZ „Sen”) =====
+    const ISS_STREAMS=[
+      '21X5lGlDOfg', // NASA TV Public/Education
+      '86YLFOog4GM', // Space Videos — ISS live
+      'Dd7FixvoKBw', // Alternatywny „Earth/ISS view”
+      'RT6fS8PuklQ'  // Rezerwowy
+    ];
+    let issIndex=0, issPlayer;
+
+    // callback wołany przez Iframe API
+    function onYouTubeIframeAPIReady(){ createIssPlayer(); }
+
+    function createIssPlayer(){
+      const vid=ISS_STREAMS[issIndex];
+      issPlayer=new YT.Player('issPlayer',{
+        host:'https://www.youtube-nocookie.com',
+        videoId:vid,
+        playerVars:{autoplay:1,mute:1,rel:0,modestbranding:1,playsinline:1},
+        events:{
+          onReady:e=>{ try{ e.target.playVideo(); }catch(_){} },
+          onError:handleIssError,
+          onStateChange:e=>{
+            if(e.data===YT.PlayerState.UNSTARTED){
+              setTimeout(()=>{
+                try{
+                  if(e.target.getPlayerState()===YT.PlayerState.UNSTARTED) handleIssError();
+                }catch(_){}
+              },2000);
+            }
+          }
+        }
+      });
+    }
+
+    function handleIssError(){
+      issIndex++;
+      if(issIndex<ISS_STREAMS.length){
+        try{ issPlayer.destroy(); }catch(_){}
+        createIssPlayer();
+      }else{
+        document.getElementById('issLive').style.display='none';
+        document.getElementById('issFallback').style.display='block';
+      }
+    }
   </script>
 
   <!-- Pasek użytkownika (Firebase Auth) -->
@@ -115,26 +145,18 @@
       measurementId: "G-1FYDH1YYR8"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+    const app=initializeApp(firebaseConfig);
+    const auth=getAuth(app);
 
-    const userBadge = document.getElementById('userBadge');
-    const loginLink = document.getElementById('loginLink');
-    const logoutLink = document.getElementById('logoutLink');
+    const badge=document.getElementById('userBadge');
+    const login=document.getElementById('loginLink');
+    const logout=document.getElementById('logoutLink');
 
-    onAuthStateChanged(auth, user => {
-      if(user){
-        userBadge.textContent = `Witaj, ${user.displayName || user.email}`;
-        loginLink.style.display = 'none';
-        logoutLink.style.display = 'inline-block';
-      }else{
-        userBadge.textContent = '';
-        loginLink.style.display = 'inline-block';
-        logoutLink.style.display = 'none';
-      }
+    onAuthStateChanged(auth,u=>{
+      if(u){ badge.textContent=`Witaj, ${u.displayName||u.email}`; login.style.display='none'; logout.style.display='inline-block'; }
+      else { badge.textContent=''; login.style.display='inline-block'; logout.style.display='none'; }
     });
-
-    logoutLink?.addEventListener('click', ()=> signOut(auth));
+    logout?.addEventListener('click',()=>signOut(auth));
   </script>
 </body>
 </html>
