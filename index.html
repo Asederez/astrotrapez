@@ -1,111 +1,59 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="utf-8" />
-  <title>AstroTrapez — live ISS, wyrzuty, zdjęcia</title>
+  <meta charset="UTF-8">
+  <title>AstroTrapez</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-
-  <style>
-    :root{
-      --bg:#060712;--panel:#121639;--text:#e8ecff;--muted:#aab2d5;
-      --b:#ffffff16;--accent:#7aa2ff;--accent2:#6e44ff;--radius:16px;--shadow:0 20px 50px rgba(0,0,0,.55);
-    }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{
-      min-height:100vh;
-      background:radial-gradient(1300px 700px at 70% 15%, #2a2358 0%, transparent 60%),var(--bg);
-      color:var(--text);
-      font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
-      padding:18px;
-    }
-    .container{max-width:1200px;margin:0 auto}
-    .brand{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-    .brand a{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none}
-    .brand svg{width:34px;height:34px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.4))}
-    .brand h1{font-weight:900;font-size:28px}
-    .badge{margin-left:auto}
-    .btn{border:1px solid var(--b);background:#151a36;color:var(--text);
-         padding:8px 12px;border-radius:999px;cursor:pointer;font-weight:800}
-    .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#0b0d1c}
-    .muted{color:var(--muted)}
-    .tabs{display:flex;gap:10px;margin:8px 0 16px;flex-wrap:wrap}
-    .tab{padding:8px 14px;border:1px solid var(--b);border-radius:999px;
-         background:#14183b;color:var(--text);text-decoration:none;font-weight:800}
-    .tab:hover{opacity:.9}
-    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
-    @media(max-width:980px){.grid{grid-template-columns:1fr}}
-    .card{background:var(--panel);border:1px solid var(--b);
-          border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:20px}
-    .card h3{font-size:16px;margin-bottom:10px}
-    .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-    .tile{display:flex;align-items:center;gap:10px;padding:16px;
-          border:1px solid var(--b);border-radius:14px;background:#151a3b;
-          text-decoration:none;color:var(--text)}
-    .tile .icon{font-size:20px}
-    .tile h2{font-size:18px}
-    .bigframe{width:100%;height:400px;border:0;border-radius:12px;background:#0b0f25}
-  </style>
+  <link rel="stylesheet" href="css/styles.css?v=7">
 </head>
 <body>
-  <div class="container">
+  <header>
+    <div class="logo">🔭 AstroTrapez</div>
+    <nav>
+      <a href="iss/index.html">🚀 ISS</a>
+      <a href="wyrzuty/index.html">☀️ Wyrzuty</a>
+      <a href="galeria/index.html">🛰️ Zdjęcia</a>
+      <a href="live/index.html">🎥 Live</a>
+    </nav>
+  </header>
 
-    <!-- BRAND -->
-    <div class="brand">
-      <a href="/" aria-label="Strona główna AstroTrapez">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M4 20h16M12 20v-6m7.5-6.5-7 3.5-3-6 7-3.5 3 6Z"
-                stroke="#bcd1ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M6 16l3-2"
-                stroke="#bcd1ff" stroke-width="1.6" stroke-linecap="round"/>
-        </svg>
-        <h1>AstroTrapez</h1>
-      </a>
-    </div>
-
-    <!-- Zakładki -->
-    <div class="tabs">
-      <a class="tab" href="/iss/">🚀 ISS</a>
-      <a class="tab" href="/wyrzuty/">☀️ Wyrzuty</a>
-      <a class="tab" href="/galeria/">🛰️ Zdjęcia</a>
-      <a class="tab" href="/live/">🎥 Live</a>
-    </div>
-
-    <!-- TikTok -->
+  <main>
+    <!-- TikTok widget -->
     <section class="card">
-  <h2>📱 Kanał na TikToku</h2>
-  <div class="tiktok-widget">
-    <img src="https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/1234567890~c5_100x100.jpeg" 
-         alt="Trap3z avatar" class="avatar">
-    <div class="info">
-      <div class="name">@trap3z</div>
-      <div class="stats">10k obserwujących • 4900 polubień</div>
-      <a href="https://www.tiktok.com/@trap3z" target="_blank" class="btn">🔗 Otwórz TikToka</a>
-    </div>
-  </div>
+      <h3>📱 Kanał na TikToku</h3>
+      <div class="tiktok-widget">
+        <img class="avatar" src="https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/5b1e6b01f9a07d08a7b5f7e66b1e86f3~c5_100x100.jpeg" alt="@trap3z avatar">
+        <div class="info">
+          <div class="name">@trap3z</div>
+          <div class="stats">10K obserwujących • 4900 polubień</div>
+          <a class="btn" href="https://www.tiktok.com/@trap3z" target="_blank">Otwórz TikToka</a>
+        </div>
+      </div>
     </section>
 
-    <!-- LIVE ISS (NASA) -->
+    <!-- ISS livestream -->
     <section class="card">
       <h3>🚀 ISS — transmisja na żywo</h3>
-      <iframe class="bigframe"
-              src="https://ustream.tv/embed/17074538"
-              allowfullscreen frameborder="0">
-      </iframe>
+      <div class="video-container">
+        <iframe 
+          src="https://www.youtube.com/embed/xRPjKQtRXR8" 
+          frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+          allowfullscreen>
+        </iframe>
+      </div>
     </section>
 
-    <!-- MAPA ISS -->
+    <!-- ISS map -->
     <section class="card">
-      <h3>🛰 Aktualna pozycja ISS</h3>
-      <iframe class="bigframe"
-              src="https://isstracker.spaceflight.esa.int/"
-              frameborder="0">
-      </iframe>
+      <h3>🛰️ Aktualna pozycja ISS</h3>
+      <div class="video-container">
+        <iframe src="https://isstracker.spaceflight.esa.int/" frameborder="0"></iframe>
+      </div>
     </section>
+  </main>
 
-  </div>
+  <!-- Tiply floating button -->
+  <a class="tiply-fab" href="https://tipply.pl/@trap3zik" target="_blank" rel="noopener">💜 Wesprzyj</a>
 </body>
 </html>
