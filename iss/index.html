@@ -2,193 +2,75 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <title>AstroTrapez — ISS live + mapa</title>
+  <title>AstroTrapez — ISS Live</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+
   <style>
-    :root{--bg:#060712;--panel:#121639;--text:#e8ecff;--muted:#aab2d5;--b:#ffffff16;--radius:16px;--shadow:0 20px 50px rgba(0,0,0,.55)}
+    :root{
+      --bg:#060712;--panel:#121639;--text:#e8ecff;--muted:#aab2d5;
+      --b:#ffffff16;--accent:#7aa2ff;--accent2:#6e44ff;--radius:16px;--shadow:0 20px 50px rgba(0,0,0,.55);
+    }
     *{box-sizing:border-box;margin:0;padding:0}
-    body{min-height:100dvh;background:radial-gradient(1300px 700px at 70% 15%, #2a2358 0%, transparent 60%),var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;padding:18px}
-    .wrap{max-width:1200px;margin:0 auto}
-    .brand{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    body{
+      min-height:100vh;
+      background:radial-gradient(1300px 700px at 70% 15%, #2a2358 0%, transparent 60%),var(--bg);
+      color:var(--text);
+      font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      padding:18px;
+    }
+    .container{max-width:1200px;margin:0 auto}
+    .brand{display:flex;align-items:center;gap:12px;margin-bottom:20px}
     .brand a{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none}
-    .brand svg{width:30px;height:30px}
-    .brand h1{font-weight:900;font-size:26px}
-    .badge{margin-left:auto;color:var(--muted)}
-    .btn{border:1px solid var(--b);background:#151a36;color:#e8ecff;padding:8px 12px;border-radius:999px;cursor:pointer;font-weight:800}
-    .card{background:var(--panel);border:1px solid var(--b);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:16px}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    @media(max-width:980px){.grid{grid-template-columns:1fr}}
+    .brand svg{width:34px;height:34px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.4))}
+    .brand h1{font-weight:900;font-size:28px}
+    .btn{border:1px solid var(--b);background:#151a36;color:var(--text);
+         padding:6px 12px;border-radius:999px;cursor:pointer;font-weight:800;text-decoration:none}
+    .btn:hover{background:#1e2455}
+    .card{background:var(--panel);border:1px solid var(--b);
+          border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:20px}
+    .card h2{font-size:18px;margin-bottom:10px}
     .bigframe{width:100%;height:420px;border:0;border-radius:12px;background:#0b0f25}
-    #map{width:100%;height:420px;border-radius:12px;overflow:hidden}
-    .muted{color:var(--muted);font-size:13px}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <!-- Nagłówek + logowanie -->
+  <div class="container">
+
+    <!-- Nagłówek -->
     <div class="brand">
-      <a href="/" aria-label="Strona główna">
+      <a href="../index.html" aria-label="Powrót do strony głównej">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M4 20h16M12 20v-6m7.5-6.5-7 3.5-3-6 7-3.5 3 6Z" stroke="#bcd1ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M6 16l3-2" stroke="#bcd1ff" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M4 20h16M12 20v-6m7.5-6.5-7 3.5-3-6 7-3.5 3 6Z"
+                stroke="#bcd1ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 16l3-2"
+                stroke="#bcd1ff" stroke-width="1.6" stroke-linecap="round"/>
         </svg>
         <h1>AstroTrapez — ISS</h1>
       </a>
-      <span id="userBadge" class="badge"></span>
-      <a id="loginLink" class="btn" href="/auth/" style="margin-left:8px">Zaloguj</a>
-      <button id="logoutLink" class="btn" style="display:none;margin-left:8px">Wyloguj</button>
+      <a href="../index.html" class="btn">⬅ Wróć</a>
     </div>
 
-    <!-- Dwie kolumny: live + mapa -->
-    <div class="grid">
-      <section class="card">
-        <h2 style="margin-bottom:8px">🚀 ISS — transmisja na żywo</h2>
+    <!-- LIVE ISS -->
+    <section class="card">
+      <h2>🎥 Transmisja na żywo z ISS</h2>
+      <iframe class="bigframe"
+              src="https://ustream.tv/embed/17074538"
+              allowfullscreen frameborder="0">
+      </iframe>
+    </section>
 
-        <!-- ODTWARZACZ: Twój live (xRPjKQtRXR8) + fallbacki kanałowe -->
-        <div id="issLive" class="bigframe" style="padding:0;overflow:hidden">
-          <iframe id="issFrame" class="bigframe" title="ISS Live"
-                  allow="autoplay; encrypted-media; picture-in-picture"
-                  referrerpolicy="strict-origin-when-cross-origin"
-                  allowfullscreen></iframe>
-        </div>
-        <div id="issFallback" style="display:none;margin-top:10px">
-          <a class="btn" target="_blank" rel="noopener"
-             href="https://www.youtube.com/results?search_query=iss+live">▶ Otwórz ISS LIVE na YouTube</a>
-        </div>
-        <div id="streamNote" class="muted" style="margin-top:8px"></div>
-      </section>
+    <!-- MAPA ISS -->
+    <section class="card">
+      <h2>🛰 Aktualna pozycja ISS</h2>
+      <iframe class="bigframe"
+              src="https://isstracker.spaceflight.esa.int/"
+              frameborder="0">
+      </iframe>
+    </section>
 
-      <section class="card">
-        <h2 style="margin-bottom:8px">🗺️ Mapa położenia ISS</h2>
-        <div id="map"></div>
-        <div id="mapNote" class="muted" style="margin-top:8px"></div>
-      </section>
-    </div>
   </div>
-
-  <!-- Leaflet -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-
-  <script>
-    // ===== Mapa ISS (hybryda: wheretheiss.at -> open-notify) =====
-    const map=L.map('map',{worldCopyJump:true}).setView([0,0],3);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap'}).addTo(map);
-    const issIcon=L.icon({iconUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',iconSize:[25,41],iconAnchor:[12,41],shadowUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'});
-    const marker=L.marker([0,0],{icon:issIcon}).addTo(map).bindPopup('ISS');
-    const track=L.polyline([], {color:'#7aa2ff',weight:3,opacity:.9}).addTo(map);
-    const mapNote=document.getElementById('mapNote');
-    let firstFix = true;
-
-    async function fetchWithTimeout(url, ms=4000){
-      const ctl = new AbortController();
-      const t = setTimeout(()=>ctl.abort(), ms);
-      try{ return await fetch(url, {signal: ctl.signal}); }
-      finally{ clearTimeout(t); }
-    }
-    async function tick(){
-      try{
-        const r = await fetchWithTimeout('https://api.wheretheiss.at/v1/satellites/25544');
-        if (r.ok){
-          const d = await r.json();
-          updateMap(d.latitude, d.longitude);
-          mapNote.textContent = '';
-          return;
-        }
-      }catch(e){}
-      try{
-        const r2 = await fetchWithTimeout('https://api.open-notify.org/iss-now.json');
-        if (r2.ok){
-          const d2 = await r2.json();
-          const lat = parseFloat(d2?.iss_position?.latitude);
-          const lon = parseFloat(d2?.iss_position?.longitude);
-          if (Number.isFinite(lat) && Number.isFinite(lon)){
-            updateMap(lat, lon);
-            mapNote.textContent = 'Korzystam z zapasowego źródła pozycji (open-notify).';
-            return;
-          }
-        }
-      }catch(e){}
-      mapNote.textContent = 'Brak aktualnych danych o pozycji ISS. Spróbuję ponownie…';
-    }
-    function updateMap(lat, lon){
-      marker.setLatLng([lat,lon]);
-      track.addLatLng([lat,lon]);
-      if (firstFix){ map.setView([lat,lon], 3); firstFix=false; }
-    }
-    tick(); setInterval(tick,5000);
-
-    // ===== Player: Twój live jako 1., potem kanałowe LIVE jako fallback =====
-    // 1) Twój konkretny live (videoId: xRPjKQtRXR8) – embed na domenie nocookie
-    // 2) NASA Official (kanałowy live)
-    // 3) Space Videos (kanałowy live)
-    const LIVE_SOURCES = [
-      'https://www.youtube-nocookie.com/embed/xRPjKQtRXR8', // Twój link
-      'https://www.youtube.com/embed/live_stream?channel=UCLA_DiR1FfKNvjuUpBHmylQ', // NASA
-      'https://www.youtube.com/embed/live_stream?channel=UCakgsb0w7QB0VHdnCc-OVEA'  // Space Videos
-    ];
-    const params = '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
-
-    let liveIndex = 0;
-    const frame = document.getElementById('issFrame');
-    const fallbackBox = document.getElementById('issFallback');
-    const streamNote = document.getElementById('streamNote');
-
-    function tryLoad(index){
-      if(index >= LIVE_SOURCES.length){
-        frame.style.display='none';
-        fallbackBox.style.display='block';
-        streamNote.textContent = 'Wszystkie źródła wideo niedostępne — link do YouTube powyżej.';
-        return;
-      }
-      liveIndex = index;
-      frame.src = LIVE_SOURCES[liveIndex] + params;
-      streamNote.textContent = `Źródło: ${liveIndex + 1}/${LIVE_SOURCES.length}`;
-
-      clearTimeout(tryLoad._t);
-      tryLoad._t = setTimeout(()=>{
-        // Jeśli coś zablokowało iframe albo nie ruszył – spróbuj następny
-        // (nie ma niezawodnego eventu "brak streamu", stąd heurystyka timeout)
-        if (!frame.contentWindow) tryLoad(liveIndex + 1);
-      }, 3500);
-    }
-
-    frame.addEventListener('error', ()=> tryLoad(liveIndex + 1));
-    frame.addEventListener('load', ()=>{/* ok */});
-
-    tryLoad(0);
-  </script>
-
-  <!-- Pasek użytkownika (Firebase Auth) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDpZ556xcaHnOKeH9r_nV-AJNh7zQO-BHs",
-      authDomain: "astrotrapez.firebaseapp.com",
-      projectId: "astrotrapez",
-      storageBucket: "astrotrapez.firebasestorage.app",
-      messagingSenderId: "313155639463",
-      appId: "1:313155639463:web:62f4928dfa2c6347d02382",
-      measurementId: "G-1FYDH1YYR8"
-    };
-
-    const app=initializeApp(firebaseConfig);
-    const auth=getAuth(app);
-
-    const badge=document.getElementById('userBadge');
-    const login=document.getElementById('loginLink');
-    const logout=document.getElementById('logoutLink');
-
-    onAuthStateChanged(auth,u=>{
-      if(u){ badge.textContent=`Witaj, ${u.displayName||u.email}`; login.style.display='none'; logout.style.display='inline-block'; }
-      else { badge.textContent=''; login.style.display='inline-block'; logout.style.display='none'; }
-    });
-    logout?.addEventListener('click',()=>signOut(auth));
-  </script>
 </body>
 </html>
