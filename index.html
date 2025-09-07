@@ -109,24 +109,29 @@
         <button class="chip" id="btnTT">TikTok Live</button>
       </div>
 
-      <!-- ISS: kontener z automatycznym fallbackiem -->
+      <!-- ISS — kanałowy LIVE (twój link) -->
       <div id="issLive" class="bigframe" style="padding:0;overflow:hidden">
-        <div id="issPlayer" style="width:100%;height:100%"></div>
+        <iframe id="issFrame" title="ISS Live" class="bigframe"
+                allow="autoplay; encrypted-media; picture-in-picture"
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen></iframe>
       </div>
       <div id="issFallback" style="display:none;margin-top:10px">
         <a class="btn primary" target="_blank" rel="noopener"
            href="https://www.youtube.com/results?search_query=iss+live">▶ Otwórz ISS LIVE na YouTube</a>
       </div>
+      <div id="streamNote" class="muted" style="margin-top:8px"></div>
 
-      <!-- TikTok LIVE – otwierany w nowej karcie -->
+      <!-- TikTok LIVE -->
       <div id="ttLiveWrap" style="display:none">
         <div class="row" style="margin-top:10px">
           <a class="btn primary" target="_blank" rel="noopener" href="https://www.tiktok.com/@trap3z/live">▶ Otwórz TikTok LIVE</a>
         </div>
       </div>
+
     </section>
 
-    <!-- MAPA ISS (hybryda) -->
+    <!-- MAPA ISS (hybrydowe źródła) -->
     <section class="card" style="margin-top:18px">
       <h3>🗺️ Mapa ISS</h3>
       <div id="map"></div>
@@ -139,24 +144,50 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <!-- TikTok embed -->
   <script async src="https://www.tiktok.com/embed.js"></script>
-  <!-- YouTube Iframe API -->
-  <script src="https://www.youtube.com/iframe_api"></script>
 
   <script>
-    // Przełącznik Live (ISS / TikTok)
+    // Przełącznik Live
     const btnISS=document.getElementById('btnISS'),btnTT=document.getElementById('btnTT');
     const issBox=document.getElementById('issLive'),ttWrap=document.getElementById('ttLiveWrap');
     btnISS.addEventListener('click',()=>{btnISS.classList.add('active');btnTT.classList.remove('active');issBox.style.display='';ttWrap.style.display='none';});
     btnTT.addEventListener('click',()=>{btnTT.classList.add('active');btnISS.classList.remove('active');issBox.style.display='none';ttWrap.style.display='';});
 
+    // ISS channel live (twoje link) + fallback logika
+    const LIVE_IFRAMES = [
+      'https://www.youtube.com/embed/live_stream?channel=UCDlxL3Y0Zqs7iVuMV2U3OfA', // PODSTAWOWY (Twój link w formie /live)
+      'https://www.youtube.com/embed/live_stream?channel=UCLA_DiR1FfKNvjuUpBHmylQ', // NASA Official
+      'https://www.youtube.com/embed/live_stream?channel=UCakgsb0w7QB0VHdnCc-OVEA'  // Space Videos
+    ];
+    const params = '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
+    let liveIndex = 0;
+    const frame = document.getElementById('issFrame');
+    const fallbackBox = document.getElementById('issFallback');
+    const note = document.getElementById('streamNote');
+
+    function tryLoad(index){
+      if(index >= LIVE_IFRAMES.length){
+        frame.style.display='none';
+        fallbackBox.style.display='block';
+        return;
+      }
+      liveIndex = index;
+      frame.src = LIVE_IFRAMES[liveIndex] + params;
+      note.textContent = `Źródło: ${liveIndex + 1}/${LIVE_IFRAMES.length}`;
+      clearTimeout(tryLoad._timeout);
+      tryLoad._timeout = setTimeout(()=>{
+        // fallback po 3.5s jeśli nie załadowane
+        tryLoad(liveIndex + 1);
+      }, 3500);
+    }
+    frame.addEventListener('error', ()=> tryLoad(liveIndex + 1));
+    frame.addEventListener('load', ()=>{ /* sukces */ });
+
+    tryLoad(0);
+
     // ===== Mapa ISS (hybrydowe źródła) =====
     const map=L.map('map').setView([0,0],3);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap'}).addTo(map);
-    const issIcon=L.icon({
-      iconUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      iconSize:[25,41],iconAnchor:[12,41],
-      shadowUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
-    });
+    const issIcon=L.icon({iconUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',iconSize:[25,41],iconAnchor:[12,41],shadowUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'});
     const marker=L.marker([0,0],{icon:issIcon}).addTo(map).bindPopup('ISS');
     const track=L.polyline([], {color:'#7aa2ff',weight:3,opacity:.8}).addTo(map);
     const mapNote=document.getElementById('mapNote');
@@ -169,7 +200,6 @@
       finally{ clearTimeout(t); }
     }
     async function updateISS(){
-      // 1) wheretheiss.at
       try{
         const r=await fetchWithTimeout('https://api.wheretheiss.at/v1/satellites/25544');
         if(r.ok){
@@ -179,71 +209,27 @@
           return;
         }
       }catch(e){}
-
-      // 2) open-notify (fallback)
       try{
         const r2=await fetchWithTimeout('https://api.open-notify.org/iss-now.json');
         if(r2.ok){
           const d2=await r2.json();
-          const lat=parseFloat(d2?.iss_position?.latitude);
-          const lon=parseFloat(d2?.iss_position?.longitude);
+          const lat = parseFloat(d2?.iss_position?.latitude);
+          const lon = parseFloat(d2?.iss_position?.longitude);
           if(Number.isFinite(lat)&&Number.isFinite(lon)){
             setPos(lat,lon);
-            mapNote.textContent='Korzystam z zapasowego źródła pozycji (open-notify).';
+            mapNote.textContent='Korzystam z zapasowego źródła (open-notify).';
             return;
           }
         }
       }catch(e){}
-
-      mapNote.textContent='Brak aktualnych danych o pozycji ISS. Spróbuję ponownie…';
+      mapNote.textContent='Brak danych o pozycji ISS. Ponawiam…';
     }
     function setPos(lat,lon){
-      marker.setLatLng([lat,lon]); track.addLatLng([lat,lon]);
+      marker.setLatLng([lat,lon]);
+      track.addLatLng([lat,lon]);
       if(firstFix){ map.setView([lat,lon],3); firstFix=false; }
     }
     updateISS(); setInterval(updateISS,5000);
-
-    // ===== ISS LIVE z fallbackiem (BEZ „Sen”) =====
-    const ISS_STREAMS=[
-      '21X5lGlDOfg', // NASA TV Public/Education
-      '86YLFOog4GM', // Space Videos — ISS live
-      'Dd7FixvoKBw', // Alternatywny „Earth/ISS view”
-      'RT6fS8PuklQ'  // Rezerwowy
-    ];
-    let issIndex=0, issPlayer;
-
-    function onYouTubeIframeAPIReady(){ createIssPlayer(); }
-    function createIssPlayer(){
-      const vid=ISS_STREAMS[issIndex];
-      issPlayer=new YT.Player('issPlayer',{
-        host:'https://www.youtube-nocookie.com',
-        videoId:vid,
-        playerVars:{autoplay:1,mute:1,rel:0,modestbranding:1,playsinline:1},
-        events:{
-          onReady:e=>{ try{ e.target.playVideo(); }catch(_){} },
-          onError:handleIssError,
-          onStateChange:e=>{
-            if(e.data===YT.PlayerState.UNSTARTED){
-              setTimeout(()=>{
-                try{
-                  if(e.target.getPlayerState()===YT.PlayerState.UNSTARTED) handleIssError();
-                }catch(_){}
-              },2000);
-            }
-          }
-        }
-      });
-    }
-    function handleIssError(){
-      issIndex++;
-      if(issIndex<ISS_STREAMS.length){
-        try{ issPlayer.destroy(); }catch(_){}
-        createIssPlayer();
-      }else{
-        document.getElementById('issLive').style.display='none';
-        document.getElementById('issFallback').style.display='block';
-      }
-    }
   </script>
 
   <!-- Firebase pasek użytkownika -->
@@ -268,12 +254,12 @@
     const loginLink=document.getElementById('loginLink');
     const logoutLink=document.getElementById('logoutLink');
 
-    onAuthStateChanged(auth, user=>{
+    onAuthStateChanged(auth,user=>{
       if(user){
-        userBadge.textContent=`Witaj, ${user.displayName || user.email}`;
+        userBadge.textContent=`Witaj, ${user.displayName||user.email}`;
         loginLink.style.display='none';
         logoutLink.style.display='inline-block';
-      }else{
+      } else {
         userBadge.textContent='';
         loginLink.style.display='inline-block';
         logoutLink.style.display='none';
