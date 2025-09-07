@@ -83,3 +83,50 @@ p { color:var(--muted); margin-bottom:30px; font-size:16px; }
 @media (min-width: 1100px){
   .cards { grid-template-columns:repeat(4,minmax(180px,1fr)); max-width:1000px; }
 }
+/* Mini widżet TikToka */
+.tiktok-widget {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  text-align: left;
+}
+
+.tiktok-widget .avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+}
+
+.tiktok-widget .info {
+  display: flex;
+  flex-direction: column;
+}
+
+.tiktok-widget .name {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text);
+}
+
+.tiktok-widget .stats {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 4px 0;
+}
+
+.tiktok-widget .btn {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.tiktok-widget .btn:hover {
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+}
