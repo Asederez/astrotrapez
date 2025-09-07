@@ -2,9 +2,10 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <title>AstroTrapez — ISS Live</title>
+  <title>ISS — Live + Mapa | AstroTrapez</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+  <!-- Font (spójny z resztą) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
@@ -12,7 +13,8 @@
   <style>
     :root{
       --bg:#060712;--panel:#121639;--text:#e8ecff;--muted:#aab2d5;
-      --b:#ffffff16;--accent:#7aa2ff;--accent2:#6e44ff;--radius:16px;--shadow:0 20px 50px rgba(0,0,0,.55);
+      --b:#ffffff16;--accent:#7aa2ff;--accent2:#6e44ff;
+      --radius:16px;--shadow:0 20px 50px rgba(0,0,0,.55);
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{
@@ -20,57 +22,92 @@
       background:radial-gradient(1300px 700px at 70% 15%, #2a2358 0%, transparent 60%),var(--bg);
       color:var(--text);
       font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
-      padding:18px;
     }
-    .container{max-width:1200px;margin:0 auto}
-    .brand{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-    .brand a{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none}
-    .brand svg{width:34px;height:34px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.4))}
-    .brand h1{font-weight:900;font-size:28px}
-    .btn{border:1px solid var(--b);background:#151a36;color:var(--text);
-         padding:6px 12px;border-radius:999px;cursor:pointer;font-weight:800;text-decoration:none}
-    .btn:hover{background:#1e2455}
-    .card{background:var(--panel);border:1px solid var(--b);
-          border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:20px}
-    .card h2{font-size:18px;margin-bottom:10px}
-    .bigframe{width:100%;height:420px;border:0;border-radius:12px;background:#0b0f25}
+    a{color:inherit;text-decoration:none}
+
+    .container{max-width:1200px;margin:0 auto;padding:18px}
+
+    /* header */
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:22px}
+    .brand:hover{opacity:.95}
+    .back{font-weight:700;color:var(--accent)}
+    .back:hover{filter:brightness(1.1)}
+
+    h1{font-size:28px;margin:10px 0 6px;font-weight:900;text-align:center}
+
+    /* cards & grid */
+    .card{
+      background:var(--panel);border:1px solid var(--b);
+      border-radius:var(--radius);box-shadow:var(--shadow);
+      padding:14px;
+    }
+    .card h3{font-size:16px;margin-bottom:10px}
+
+    .iss-grid{display:grid;gap:16px}
+    @media (min-width: 1000px){
+      .iss-grid{grid-template-columns:1fr 1fr;}
+    }
+
+    /* responsive iframe */
+    .video-container{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;background:#0b0f25}
+    .video-container iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+
+    /* little note */
+    .note{margin-top:8px;color:var(--muted);font-size:14px}
+
+    /* tiply floating */
+    .tiply-fab{
+      position:fixed;right:20px;bottom:20px;z-index:1000;
+      background:linear-gradient(135deg,#98e0ff,#6e44ff);
+      padding:12px 14px;border-radius:999px;color:#0b0d1c;text-decoration:none;font-weight:800;
+      box-shadow:0 10px 25px rgba(0,0,0,.45)
+    }
   </style>
 </head>
 <body>
   <div class="container">
 
-    <!-- Nagłówek -->
-    <div class="brand">
-      <a href="../index.html" aria-label="Powrót do strony głównej">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M4 20h16M12 20v-6m7.5-6.5-7 3.5-3-6 7-3.5 3 6Z"
-                stroke="#bcd1ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M6 16l3-2"
-                stroke="#bcd1ff" stroke-width="1.6" stroke-linecap="round"/>
-        </svg>
-        <h1>AstroTrapez — ISS</h1>
-      </a>
-      <a href="../index.html" class="btn">⬅ Wróć</a>
-    </div>
+    <header>
+      <a class="back" href="/">← Wróć</a>
+      <a class="brand" href="/">AstroTrapez</a>
+      <span></span>
+    </header>
 
-    <!-- LIVE ISS -->
-    <section class="card">
-      <h2>🎥 Transmisja na żywo z ISS</h2>
-      <iframe class="bigframe"
-              src="https://ustream.tv/embed/17074538"
-              allowfullscreen frameborder="0">
-      </iframe>
-    </section>
+    <h1>🚀 ISS – Live + Mapa</h1>
 
-    <!-- MAPA ISS -->
-    <section class="card">
-      <h2>🛰 Aktualna pozycja ISS</h2>
-      <iframe class="bigframe"
-              src="https://isstracker.spaceflight.esa.int/"
-              frameborder="0">
-      </iframe>
+    <section class="iss-grid">
+
+      <!-- LIVE -->
+      <div class="card">
+        <h3>🎥 Transmisja ISS (YouTube)</h3>
+        <div class="video-container">
+          <iframe
+            src="https://www.youtube.com/embed/0FBiyFpV__g?autoplay=1&mute=1&playsinline=1"
+            title="ISS Live"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allowfullscreen>
+          </iframe>
+        </div>
+        <p class="note">
+          Jeśli player nie startuje, otwórz bezpośrednio:
+          <a href="https://www.youtube.com/live/0FBiyFpV__g" target="_blank" rel="noopener">YouTube – ISS Live</a>.
+        </p>
+      </div>
+
+      <!-- MAPA -->
+      <div class="card">
+        <h3>🛰 Aktualna pozycja ISS</h3>
+        <div class="video-container">
+          <iframe src="https://isstracker.spaceflight.esa.int/" title="Mapa ISS"></iframe>
+        </div>
+      </div>
+
     </section>
 
   </div>
+
+  <a class="tiply-fab" href="https://tipply.pl/@trap3zik" target="_blank" rel="noopener">💜 Wesprzyj</a>
 </body>
 </html>
