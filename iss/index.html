@@ -47,9 +47,13 @@
     <div class="grid">
       <section class="card">
         <h2 style="margin-bottom:8px">🚀 ISS — transmisja na żywo</h2>
-        <!-- ODTWARZACZ z fallbackiem (YouTube Iframe API, bez „Sen”) -->
+
+        <!-- ODTWARZACZ: Twój live (xRPjKQtRXR8) + fallbacki kanałowe -->
         <div id="issLive" class="bigframe" style="padding:0;overflow:hidden">
-          <div id="issPlayer" style="width:100%;height:100%"></div>
+          <iframe id="issFrame" class="bigframe" title="ISS Live"
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  allowfullscreen></iframe>
         </div>
         <div id="issFallback" style="display:none;margin-top:10px">
           <a class="btn" target="_blank" rel="noopener"
@@ -68,11 +72,9 @@
 
   <!-- Leaflet -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <!-- YouTube Iframe API -->
-  <script src="https://www.youtube.com/iframe_api"></script>
 
   <script>
-    // ===== Mapa ISS (hybrydowe źródła) =====
+    // ===== Mapa ISS (hybryda: wheretheiss.at -> open-notify) =====
     const map=L.map('map',{worldCopyJump:true}).setView([0,0],3);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap'}).addTo(map);
     const issIcon=L.icon({iconUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',iconSize:[25,41],iconAnchor:[12,41],shadowUrl:'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'});
@@ -84,14 +86,10 @@
     async function fetchWithTimeout(url, ms=4000){
       const ctl = new AbortController();
       const t = setTimeout(()=>ctl.abort(), ms);
-      try{
-        const res = await fetch(url, {signal: ctl.signal});
-        return res;
-      } finally { clearTimeout(t); }
+      try{ return await fetch(url, {signal: ctl.signal}); }
+      finally{ clearTimeout(t); }
     }
-
     async function tick(){
-      // 1) wheretheiss.at
       try{
         const r = await fetchWithTimeout('https://api.wheretheiss.at/v1/satellites/25544');
         if (r.ok){
@@ -100,9 +98,7 @@
           mapNote.textContent = '';
           return;
         }
-      }catch(e){/* przechodzimy do fallbacku */ }
-
-      // 2) open-notify (fallback)
+      }catch(e){}
       try{
         const r2 = await fetchWithTimeout('https://api.open-notify.org/iss-now.json');
         if (r2.ok){
@@ -116,66 +112,54 @@
           }
         }
       }catch(e){}
-
-      // 3) brak danych
       mapNote.textContent = 'Brak aktualnych danych o pozycji ISS. Spróbuję ponownie…';
     }
-
     function updateMap(lat, lon){
       marker.setLatLng([lat,lon]);
       track.addLatLng([lat,lon]);
       if (firstFix){ map.setView([lat,lon], 3); firstFix=false; }
     }
+    tick(); setInterval(tick,5000);
 
-    tick(); setInterval(tick, 5000);
-
-    // ===== ISS LIVE (auto-fallback, BEZ „Sen”) =====
-    const ISS_STREAMS=[
-      '21X5lGlDOfg', // NASA TV Public/Education
-      '86YLFOog4GM', // Space Videos — ISS live
-      'Dd7FixvoKBw', // Alternatywny „Earth/ISS view”
-      'RT6fS8PuklQ'  // Rezerwowy
+    // ===== Player: Twój live jako 1., potem kanałowe LIVE jako fallback =====
+    // 1) Twój konkretny live (videoId: xRPjKQtRXR8) – embed na domenie nocookie
+    // 2) NASA Official (kanałowy live)
+    // 3) Space Videos (kanałowy live)
+    const LIVE_SOURCES = [
+      'https://www.youtube-nocookie.com/embed/xRPjKQtRXR8', // Twój link
+      'https://www.youtube.com/embed/live_stream?channel=UCLA_DiR1FfKNvjuUpBHmylQ', // NASA
+      'https://www.youtube.com/embed/live_stream?channel=UCakgsb0w7QB0VHdnCc-OVEA'  // Space Videos
     ];
-    let issIndex=0, issPlayer;
+    const params = '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
+
+    let liveIndex = 0;
+    const frame = document.getElementById('issFrame');
+    const fallbackBox = document.getElementById('issFallback');
     const streamNote = document.getElementById('streamNote');
 
-    // callback wołany przez Iframe API
-    function onYouTubeIframeAPIReady(){ createIssPlayer(); }
-
-    function createIssPlayer(){
-      const vid=ISS_STREAMS[issIndex];
-      streamNote.textContent = `Źródło: #${issIndex+1}`;
-      issPlayer=new YT.Player('issPlayer',{
-        host:'https://www.youtube-nocookie.com',
-        videoId:vid,
-        playerVars:{autoplay:1,mute:1,rel:0,modestbranding:1,playsinline:1},
-        events:{
-          onReady:e=>{ try{ e.target.playVideo(); }catch(_){} },
-          onError:handleIssError,
-          onStateChange:e=>{
-            if(e.data===YT.PlayerState.UNSTARTED){
-              setTimeout(()=>{
-                try{
-                  if(e.target.getPlayerState()===YT.PlayerState.UNSTARTED) handleIssError();
-                }catch(_){}
-              },2000);
-            }
-          }
-        }
-      });
-    }
-
-    function handleIssError(){
-      issIndex++;
-      if(issIndex<ISS_STREAMS.length){
-        try{ issPlayer.destroy(); }catch(_){}
-        createIssPlayer();
-      }else{
-        document.getElementById('issLive').style.display='none';
-        document.getElementById('issFallback').style.display='block';
-        streamNote.textContent = 'Wszystkie źródła wideo niedostępne — pokazuję link do YouTube.';
+    function tryLoad(index){
+      if(index >= LIVE_SOURCES.length){
+        frame.style.display='none';
+        fallbackBox.style.display='block';
+        streamNote.textContent = 'Wszystkie źródła wideo niedostępne — link do YouTube powyżej.';
+        return;
       }
+      liveIndex = index;
+      frame.src = LIVE_SOURCES[liveIndex] + params;
+      streamNote.textContent = `Źródło: ${liveIndex + 1}/${LIVE_SOURCES.length}`;
+
+      clearTimeout(tryLoad._t);
+      tryLoad._t = setTimeout(()=>{
+        // Jeśli coś zablokowało iframe albo nie ruszył – spróbuj następny
+        // (nie ma niezawodnego eventu "brak streamu", stąd heurystyka timeout)
+        if (!frame.contentWindow) tryLoad(liveIndex + 1);
+      }, 3500);
     }
+
+    frame.addEventListener('error', ()=> tryLoad(liveIndex + 1));
+    frame.addEventListener('load', ()=>{/* ok */});
+
+    tryLoad(0);
   </script>
 
   <!-- Pasek użytkownika (Firebase Auth) -->
